@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+// New: Only fetches/generates each week as requested, stores visited weeks in state
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -21,20 +22,94 @@ type Week = {
   days: Day[];
 };
 
-type TransformationPlan = {
-  weeks?: Week[];
+type DynamicTransformationPlan = {
+  // Only populated weeks
+  [weekIdx: number]: Week | undefined;
 };
 
+// We start not knowing how many weeks there are until user specifies!
 type Props = {
-  transformationPlan: TransformationPlan | null;
+  transformationPlan: { userGoal?: string; timeCommitment?: string; totalWeeks?: number } | null;
 };
 
 const bgCard = "#F2F2F7";
 
 export default function TransformationPlanCards({ transformationPlan }: Props) {
-  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  // Store each loaded/generated week's data using a mapping
+  const [weeksByIndex, setWeeksByIndex] = useState<DynamicTransformationPlan>({});
+  const [currentWeekIdx, setCurrentWeekIdx] = useState(1); // 1-based user-facing
+  const [totalWeeks, setTotalWeeks] = useState<number | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!transformationPlan?.weeks || transformationPlan.weeks.length === 0) {
+  // Try to get an initial totalWeeks estimate, then allow user to advance beyond
+  useEffect(() => {
+    setError(null);
+    if (!transformationPlan?.userGoal || !transformationPlan.timeCommitment) return;
+    if (Object.keys(weeksByIndex).length === 0 && !loading) {
+      fetchWeek(1);
+    }
+    // eslint-disable-next-line
+  }, [transformationPlan]);
+
+  async function fetchWeek(weekNumber: number) {
+    if (weeksByIndex[weekNumber]) return; // already fetched
+    setLoading(true);
+    setError(null);
+    try {
+      // As totalWeeks might be unknown, fetch totalWeeks from plan or use a fallback (e.g. 12)
+      const baseWeeks = transformationPlan?.totalWeeks ?? 12;
+      const res = await fetch(
+        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userGoal: transformationPlan?.userGoal,
+            timeCommitment: transformationPlan?.timeCommitment,
+            week: weekNumber,
+            totalWeeks: baseWeeks,
+          })
+        }
+      );
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Failed to generate week.");
+      }
+      const { weekData } = await res.json();
+      if (!weekData) throw new Error("No week data found.");
+      setWeeksByIndex(prev => ({ ...prev, [weekNumber]: weekData }));
+      if (typeof setTotalWeeks === "function" && !totalWeeks && weekData.week && weekData.totalWeeks) {
+        setTotalWeeks(weekData.totalWeeks); // Allow for future upgrades
+      }
+    } catch (e: any) {
+      setError(e.message || "Unable to load content for this week.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Navigation logic
+  function handlePrev() {
+    if (currentWeekIdx > 1) setCurrentWeekIdx(i => i - 1);
+  }
+  function handleNext() {
+    setCurrentWeekIdx(i => i + 1);
+    fetchWeek(currentWeekIdx + 1);
+  }
+
+  // On currentWeekIdx changed, fetch if not already present
+  useEffect(() => {
+    if (!weeksByIndex[currentWeekIdx]) {
+      fetchWeek(currentWeekIdx);
+    }
+    // eslint-disable-next-line
+  }, [currentWeekIdx]);
+
+  const currentWeek = weeksByIndex[currentWeekIdx];
+
+  // UI rendering -- always only shows one week
+  if (!transformationPlan?.userGoal || !transformationPlan.timeCommitment) {
     return (
       <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg" style={{ background: bgCard }}>
         Enter a goal to receive your personalized transformation roadmap.
@@ -42,36 +117,39 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
     );
   }
 
-  const weeks = transformationPlan.weeks;
-  // Guard against out of bounds index
-  const safeIndex = Math.max(0, Math.min(currentWeekIndex, weeks.length - 1));
-  const currentWeek = weeks[safeIndex];
-
-  // If currentWeek is undefined (malformed data), show error gracefully
-  if (!currentWeek) {
+  if (error) {
     return (
       <div className="rounded-2xl bg-red-100 shadow-card p-8 text-center text-red-500 font-medium text-lg" style={{ background: bgCard }}>
-        Sorry, this roadmap couldn't be displayed correctly. Please try generating a new plan.
+        {error}
+      </div>
+    );
+  }
+
+  if (loading || !currentWeek) {
+    return (
+      <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg animate-pulse" style={{ background: bgCard }}>
+        Loading week {currentWeekIdx}...
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-8 mb-8">
-      <WeekCard week={currentWeek} key={currentWeek.week || safeIndex} />
+      <WeekCard week={currentWeek} key={currentWeek.week || currentWeekIdx} />
       <div className="flex flex-row gap-4 justify-center">
         <button
           className="px-4 py-2 rounded-md bg-gray-200 text-primary font-semibold disabled:opacity-50"
-          disabled={safeIndex === 0 || weeks.length === 1}
-          onClick={() => setCurrentWeekIndex(i => Math.max(0, i - 1))}
+          disabled={currentWeekIdx === 1}
+          onClick={handlePrev}
         >
           ← Previous
         </button>
-        <div className="self-center text-primary font-semibold">{`Week ${currentWeek.week} of ${weeks.length}`}</div>
+        <div className="self-center text-primary font-semibold">
+          {`Week ${currentWeekIdx}` + (totalWeeks ? ` of ${totalWeeks}` : "")}
+        </div>
         <button
           className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold disabled:opacity-50"
-          disabled={safeIndex === weeks.length - 1 || weeks.length === 1}
-          onClick={() => setCurrentWeekIndex(i => Math.min(weeks.length - 1, i + 1))}
+          onClick={handleNext}
         >
           Next →
         </button>
@@ -93,7 +171,6 @@ const WeekCard: React.FC<{ week: Week }> = ({ week }) => (
         <div className="font-semibold flex items-center gap-2">📚 Resources:
           <span className="font-normal flex flex-col gap-1">
             {week.resources.map((r, i) => {
-              // Try to split as "title – url"
               const arr = r.split("–").map(x => x.trim());
               if (arr.length >= 2) {
                 return (
@@ -102,9 +179,7 @@ const WeekCard: React.FC<{ week: Week }> = ({ week }) => (
                   </a>
                 );
               }
-              return (
-                <span key={i}>{r}</span>
-              );
+              return <span key={i}>{r}</span>;
             })}
           </span>
         </div>
