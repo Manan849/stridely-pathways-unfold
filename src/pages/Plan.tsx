@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { PlanProvider, usePlan } from "@/context/PlanContext";
 import NextBigGoalCard from "@/components/NextBigGoalCard";
 import TransformationPlanCards from "@/components/TransformationPlanCards";
