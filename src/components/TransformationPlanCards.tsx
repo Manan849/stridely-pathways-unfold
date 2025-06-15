@@ -43,15 +43,26 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
   }
 
   const weeks = transformationPlan.weeks;
-  const currentWeek = weeks[currentWeekIndex];
+  // Guard against out of bounds index
+  const safeIndex = Math.max(0, Math.min(currentWeekIndex, weeks.length - 1));
+  const currentWeek = weeks[safeIndex];
+
+  // If currentWeek is undefined (malformed data), show error gracefully
+  if (!currentWeek) {
+    return (
+      <div className="rounded-2xl bg-red-100 shadow-card p-8 text-center text-red-500 font-medium text-lg" style={{ background: bgCard }}>
+        Sorry, this roadmap couldn't be displayed correctly. Please try generating a new plan.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 mb-8">
-      <WeekCard week={currentWeek} key={currentWeek.week || currentWeekIndex} />
+      <WeekCard week={currentWeek} key={currentWeek.week || safeIndex} />
       <div className="flex flex-row gap-4 justify-center">
         <button
           className="px-4 py-2 rounded-md bg-gray-200 text-primary font-semibold disabled:opacity-50"
-          disabled={currentWeekIndex === 0}
+          disabled={safeIndex === 0 || weeks.length === 1}
           onClick={() => setCurrentWeekIndex(i => Math.max(0, i - 1))}
         >
           ← Previous
@@ -59,7 +70,7 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
         <div className="self-center text-primary font-semibold">{`Week ${currentWeek.week} of ${weeks.length}`}</div>
         <button
           className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold disabled:opacity-50"
-          disabled={currentWeekIndex === weeks.length - 1}
+          disabled={safeIndex === weeks.length - 1 || weeks.length === 1}
           onClick={() => setCurrentWeekIndex(i => Math.min(weeks.length - 1, i + 1))}
         >
           Next →
