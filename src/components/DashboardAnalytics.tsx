@@ -13,31 +13,46 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-// This will eventually come from real data
-const habitConsistencyData = [
-  { name: 'W1', consistency: 80 },
-  { name: 'W2', consistency: 75 },
-  { name: 'W3', consistency: 90 },
-  { name: 'W4', consistency: 85 },
-  { name: 'Current', consistency: 78 },
-];
-
-const taskCompletionData = [
-  { name: 'Mon', completed: 5, total: 7 },
-  { name: 'Tue', completed: 6, total: 6 },
-  { name: 'Wed', completed: 4, total: 5 },
-  { name: 'Thu', completed: 7, total: 8 },
-  { name: 'Fri', completed: 5, total: 5 },
-  { name: 'Sat', completed: 3, total: 4 },
-  { name: 'Sun', completed: 2, total: 2 },
-];
+import { usePlan } from '@/context/PlanContext';
 
 const DashboardAnalytics = () => {
-  const processedTaskData = taskCompletionData.map((d) => ({
-    ...d,
-    remaining: d.total - d.completed,
-  }));
+  const { transformationPlan } = usePlan();
+
+  // Generate real data based on actual plan
+  const hasData = transformationPlan.weeks.length > 0;
+  
+  // Default empty state data
+  const emptyHabitData = [
+    { name: 'Week 1', consistency: 0 },
+    { name: 'Week 2', consistency: 0 },
+    { name: 'Week 3', consistency: 0 },
+    { name: 'Week 4', consistency: 0 },
+    { name: 'Current', consistency: 0 },
+  ];
+
+  const emptyTaskData = [
+    { name: 'Mon', completed: 0, total: 0, remaining: 0 },
+    { name: 'Tue', completed: 0, total: 0, remaining: 0 },
+    { name: 'Wed', completed: 0, total: 0, remaining: 0 },
+    { name: 'Thu', completed: 0, total: 0, remaining: 0 },
+    { name: 'Fri', completed: 0, total: 0, remaining: 0 },
+    { name: 'Sat', completed: 0, total: 0, remaining: 0 },
+    { name: 'Sun', completed: 0, total: 0, remaining: 0 },
+  ];
+
+  // TODO: This will be replaced with real progress tracking data
+  const habitConsistencyData = emptyHabitData;
+  const taskCompletionData = emptyTaskData;
+
+  const recommendations = hasData ? [
+    'Start tracking your daily progress to see insights here.',
+    'Complete your first week to unlock detailed analytics.',
+    'Your transformation journey begins with the first step!'
+  ] : [
+    'Create your transformation plan to start tracking progress.',
+    'Set up your goals to receive personalized insights.',
+    'Your journey to success starts with a plan!'
+  ];
 
   return (
     <section className="mt-8 md:mt-12">
@@ -46,7 +61,9 @@ const DashboardAnalytics = () => {
         <Card>
           <CardHeader>
             <CardTitle>Habit Consistency</CardTitle>
-            <CardDescription>Your weekly habit performance</CardDescription>
+            <CardDescription>
+              {hasData ? 'Your weekly habit performance' : 'Track habits to see progress'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -56,7 +73,14 @@ const DashboardAnalytics = () => {
                 <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="consistency" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="consistency" 
+                  stroke="hsl(var(--primary))" 
+                  activeDot={{ r: 8 }}
+                  strokeWidth={hasData ? 2 : 1}
+                  strokeDasharray={hasData ? "0" : "5,5"}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -64,11 +88,13 @@ const DashboardAnalytics = () => {
         <Card>
           <CardHeader>
             <CardTitle>Weekly Task Completion</CardTitle>
-            <CardDescription>Completed vs. total tasks this week</CardDescription>
+            <CardDescription>
+              {hasData ? 'Completed vs. total tasks this week' : 'Start completing tasks to see data'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={processedTaskData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+              <BarChart data={taskCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -87,9 +113,9 @@ const DashboardAnalytics = () => {
         </CardHeader>
         <CardContent>
           <ul className="list-disc pl-5 space-y-2 text-primary/80">
-            <li>Your habit consistency is trending upwards. Keep up the great work!</li>
-            <li>You had a perfect score on Tuesday and Friday for tasks. Analyze what went right on those days.</li>
-            <li>Consider planning lighter tasks on Wednesday to avoid feeling overwhelmed.</li>
+            {recommendations.map((rec, index) => (
+              <li key={index}>{rec}</li>
+            ))}
           </ul>
         </CardContent>
       </Card>

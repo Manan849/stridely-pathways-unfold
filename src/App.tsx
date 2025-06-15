@@ -11,6 +11,7 @@ import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
 import Account from "./pages/Account";
 import { UserProvider, useUser } from "@/hooks/useUser";
+import { PlanProvider } from "@/context/PlanContext";
 import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
@@ -40,7 +41,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <UserProvider>
-        <AppContent />
+        <PlanProvider>
+          <AppContent />
+        </PlanProvider>
       </UserProvider>
     </TooltipProvider>
   </QueryClientProvider>
