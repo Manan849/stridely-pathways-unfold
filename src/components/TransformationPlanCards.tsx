@@ -32,6 +32,8 @@ type Props = {
 const bgCard = "#F2F2F7";
 
 export default function TransformationPlanCards({ transformationPlan }: Props) {
+  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+
   if (!transformationPlan?.weeks || transformationPlan.weeks.length === 0) {
     return (
       <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg" style={{ background: bgCard }}>
@@ -40,11 +42,29 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
     );
   }
 
+  const weeks = transformationPlan.weeks;
+  const currentWeek = weeks[currentWeekIndex];
+
   return (
     <div className="flex flex-col gap-8 mb-8">
-      {transformationPlan.weeks.map((week, idx) => (
-        <WeekCard week={week} key={week.week || idx} />
-      ))}
+      <WeekCard week={currentWeek} key={currentWeek.week || currentWeekIndex} />
+      <div className="flex flex-row gap-4 justify-center">
+        <button
+          className="px-4 py-2 rounded-md bg-gray-200 text-primary font-semibold disabled:opacity-50"
+          disabled={currentWeekIndex === 0}
+          onClick={() => setCurrentWeekIndex(i => Math.max(0, i - 1))}
+        >
+          ← Previous
+        </button>
+        <div className="self-center text-primary font-semibold">{`Week ${currentWeek.week} of ${weeks.length}`}</div>
+        <button
+          className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold disabled:opacity-50"
+          disabled={currentWeekIndex === weeks.length - 1}
+          onClick={() => setCurrentWeekIndex(i => Math.min(weeks.length - 1, i + 1))}
+        >
+          Next →
+        </button>
+      </div>
     </div>
   );
 }
