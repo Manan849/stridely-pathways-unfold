@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -5,19 +6,7 @@ import TimeDropdown from "@/components/TimeDropdown";
 import WeeklyRoadmapCard from "@/components/WeeklyRoadmapCard";
 import ThisWeekProgress from "@/components/ThisWeekProgress";
 import WeeklyCheckIn from "@/components/WeeklyCheckIn";
-
-const FAKE_AI_RESPONSE = {
-  weeks: [
-    {
-      week: 1,
-      skills: ["Skill A", "Skill B"],
-      habits: ["Daily journaling", "30 min reading"],
-      milestone: "Complete Intro to Product Design course",
-      resources: ["DesignCourse.com - Beginner Guide"],
-    },
-    // ... additional weeks can be filled in or generated
-  ],
-};
+import { toast } from "@/components/ui/use-toast";
 
 const PLAN_PERSIST_KEY = "stridely-plan";
 const PROGRESS_KEY = "stridely-progress-history";
@@ -29,6 +18,7 @@ const Plan = () => {
   const [roadmap, setRoadmap] = useState<any | null>(null);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [progressHistory, setProgressHistory] = useState<boolean[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Control for displaying Weekly Check-In:
   const [showWeeklyCheckIn, setShowWeeklyCheckIn] = useState(false);
@@ -36,7 +26,6 @@ const Plan = () => {
 
   // Sync progress history from localStorage
   useEffect(() => {
-    // Could be loaded from DB if user is logged in in the future.
     const stored = localStorage.getItem(PROGRESS_KEY);
     if (roadmap?.weeks && Array.isArray(roadmap.weeks)) {
       setProgressHistory(
@@ -62,15 +51,50 @@ const Plan = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     setRoadmap(null);
 
-    // Simulate API call and plan generation
-    setTimeout(() => {
-      setLoading(false);
-      setRoadmap(FAKE_AI_RESPONSE);
-      setProgressHistory(Array(FAKE_AI_RESPONSE.weeks.length).fill(false));
+    try {
+      const res = await fetch(
+        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-roadmap",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            userGoal: goal,
+            timeCommitment: time
+          })
+        }
+      );
+      if (!res.ok) {
+        let errorMsg = "Failed to generate roadmap.";
+        try {
+          const { error } = await res.json();
+          errorMsg = error || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+      const { roadmap } = await res.json();
+      if (!roadmap || !roadmap.weeks) throw new Error("No roadmap data found.");
+      setRoadmap(roadmap);
+      setProgressHistory(Array(roadmap.weeks.length).fill(false));
       setCurrentWeekIndex(0);
-    }, 1200);
+      toast({
+        title: "Success!",
+        description: "Transformation plan generated."
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to generate roadmap.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message || "Failed to generate roadmap."
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Trigger Weekly Check-In if: all progress is checked/completed for the week
@@ -122,7 +146,6 @@ const Plan = () => {
     setShowWeeklyCheckIn(false);
   };
 
-  // Responsive layout: stack on mobile, 2 columns on md+
   return (
     <div className="pt-28 max-w-4xl mx-auto px-4">
       <div className="mb-12">
@@ -168,6 +191,9 @@ const Plan = () => {
               {loading ? "Generating..." : "Generate My Transformation Plan"}
             </Button>
           </form>
+          {error && (
+            <div className="mt-4 text-red-600 font-medium text-center">{error}</div>
+          )}
         </div>
       </div>
       {/* Roadmap and Progress Section */}
@@ -175,7 +201,11 @@ const Plan = () => {
         {/* Main Roadmap (left on desktop, below on mobile) */}
         <div className="flex-1 w-full">
           <div className="flex flex-col gap-6 mb-6">
-            {roadmap?.weeks && roadmap.weeks.length > 0 ? (
+            {loading ? (
+              <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
+                Generating your personalized roadmap...
+              </div>
+            ) : roadmap?.weeks && roadmap.weeks.length > 0 ? (
               roadmap.weeks.map((w: any, i: number) => (
                 <WeeklyRoadmapCard
                   key={w.week || i}
@@ -250,3 +280,4 @@ const Plan = () => {
 };
 
 export default Plan;
+
