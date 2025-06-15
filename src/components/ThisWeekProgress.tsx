@@ -159,9 +159,7 @@ const ThisWeekProgress: React.FC<Props> = ({
           <label className="flex items-center gap-2">
             <Checkbox
               checked={milestoneChecked}
-              onCheckedChange={val => {
-                setMilestoneChecked(!!val);
-              }}
+              onCheckedChange={val => setMilestoneChecked(val === true)}
             />
             <span className="text-sm text-primary/70 select-none">Mark as done</span>
           </label>
