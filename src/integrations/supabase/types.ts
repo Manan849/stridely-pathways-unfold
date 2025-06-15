@@ -9,6 +9,88 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_checkins: {
+        Row: {
+          created_at: string
+          date: string
+          energy: number | null
+          id: string
+          mood: number | null
+          plan_id: string | null
+          reflection: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          energy?: number | null
+          id?: string
+          mood?: number | null
+          plan_id?: string | null
+          reflection?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          energy?: number | null
+          id?: string
+          mood?: number | null
+          plan_id?: string | null
+          reflection?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_checkins_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_progress: {
+        Row: {
+          date: string
+          habits_completed: boolean[]
+          id: string
+          plan_id: string | null
+          tasks_completed: boolean[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          date: string
+          habits_completed?: boolean[]
+          id?: string
+          plan_id?: string | null
+          tasks_completed?: boolean[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          date?: string
+          habits_completed?: boolean[]
+          id?: string
+          plan_id?: string | null
+          tasks_completed?: boolean[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_progress: {
         Row: {
           checked_habits: boolean[]
@@ -40,6 +122,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "habit_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_adaptations: {
+        Row: {
+          accepted: boolean | null
+          adaptation_type: string
+          created_at: string
+          id: string
+          plan_id: string | null
+          suggestion: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted?: boolean | null
+          adaptation_type: string
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          suggestion: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted?: boolean | null
+          adaptation_type?: string
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          suggestion?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_adaptations_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "user_plans"
@@ -81,6 +204,61 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_insights: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          insight_text: string
+          plan_id: string | null
+          related_adaptation: string | null
+          related_checkin: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          insight_text: string
+          plan_id?: string | null
+          related_adaptation?: string | null
+          related_checkin?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          insight_text?: string
+          plan_id?: string | null
+          related_adaptation?: string | null
+          related_checkin?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_insights_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_insights_related_adaptation_fkey"
+            columns: ["related_adaptation"]
+            isOneToOne: false
+            referencedRelation: "plan_adaptations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_insights_related_checkin_fkey"
+            columns: ["related_checkin"]
+            isOneToOne: false
+            referencedRelation: "daily_checkins"
             referencedColumns: ["id"]
           },
         ]
