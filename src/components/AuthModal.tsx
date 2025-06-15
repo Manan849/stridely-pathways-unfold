@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FcGoogle } from "react-icons/fc";
 import { toast } from "@/hooks/use-toast";
+import { BadgeCheck } from "lucide-react"; // Lucide icon for Google
 
 const AuthModal = ({
   open,
@@ -102,7 +102,7 @@ const AuthModal = ({
             disabled={pending}
             onClick={signInWithGoogle}
           >
-            <FcGoogle className="size-5" /> Continue with Google
+            <BadgeCheck className="size-5 text-[#4285F4]" /> Continue with Google
           </Button>
         </form>
         <div className="mt-3 text-center text-sm">
