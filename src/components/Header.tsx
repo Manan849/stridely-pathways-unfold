@@ -8,8 +8,8 @@ export default function Header() {
         <div className="flex items-center">
           <img 
             src="/lovable-uploads/a48dafcb-699d-4c7c-9266-f1c3aecf54a7.png" 
-            alt="Stridely Logo" 
-            className="h-8 w-auto"
+            alt="stridely logo" 
+            className="h-10 w-auto"
           />
         </div>
       </div>
