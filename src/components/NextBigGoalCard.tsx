@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,9 +7,23 @@ import TimeDropdown from "@/components/TimeDropdown";
 import React, { useState } from "react";
 import { usePlan } from "@/context/PlanContext";
 import { toast } from "@/hooks/use-toast";
+// Import Supabase ANON key
+import { SUPABASE_ANON_KEY } from "@/integrations/supabase/client"; // We'll use the actual key, see below.
+import { supabase } from "@/integrations/supabase/client";
+
+// Helper: get the ANON key from the client file as a constant.
+const ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcHdib3pwa3B1bGtycHhwcHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NTg0MjQsImV4cCI6MjA2NTUzNDQyNH0.Y4Gx54vceTvlnbG31z6gnskXsNUCaXobjhOPZo6Oa_E";
 
 export default function NextBigGoalCard() {
-  const { userGoal, setUserGoal, timeCommitment, setTimeCommitment, setTransformationPlan, userId } = usePlan();
+  const {
+    userGoal,
+    setUserGoal,
+    timeCommitment,
+    setTimeCommitment,
+    setTransformationPlan,
+    userId,
+  } = usePlan();
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
@@ -19,18 +34,23 @@ export default function NextBigGoalCard() {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${ANON_KEY}`,
           },
           body: JSON.stringify({
             user_id: userId,
             userGoal,
-            timeCommitment
-          })
+            timeCommitment,
+          }),
         }
       );
       if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error || "Failed to generate roadmap.");
+        let message = "Failed to generate roadmap.";
+        try {
+          const { error } = await res.json();
+          message = error || message;
+        } catch {}
+        throw new Error(message);
       }
       const { roadmap } = await res.json();
       if (!roadmap?.weeks) {
@@ -67,7 +87,7 @@ export default function NextBigGoalCard() {
               id="user-goal"
               placeholder="e.g. Build a startup, become a designer"
               value={userGoal}
-              onChange={e => setUserGoal(e.target.value)}
+              onChange={(e) => setUserGoal(e.target.value)}
               disabled={loading}
             />
           </div>
@@ -75,10 +95,7 @@ export default function NextBigGoalCard() {
             <Label htmlFor="hours-dropdown" className="mb-2 block font-semibold">
               How many hours/week can you commit?
             </Label>
-            <TimeDropdown
-              value={timeCommitment}
-              onChange={setTimeCommitment}
-            />
+            <TimeDropdown value={timeCommitment} onChange={setTimeCommitment} />
           </div>
           <Button
             className="w-full mt-4 bg-[#007AFF] hover:bg-[#005bb5] text-white text-lg font-bold py-3 rounded-xl shadow-card transition-button"
