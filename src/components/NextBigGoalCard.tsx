@@ -16,7 +16,7 @@ export default function NextBigGoalCard() {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-roadmap`,
+        `https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan`, // Updated function
         {
           method: "POST",
           headers: {
@@ -53,7 +53,7 @@ export default function NextBigGoalCard() {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto mb-8">
+    <Card className="w-full max-w-lg mx-auto mb-8 bg-white rounded-2xl">
       <CardHeader>
         <CardTitle>Your Next Big Goal</CardTitle>
       </CardHeader>
@@ -66,16 +66,18 @@ export default function NextBigGoalCard() {
             </Label>
             <Input
               id="user-goal"
-              placeholder="e.g. Launch a startup, become a product designer…"
+              placeholder="e.g. Build a startup, become a designer"
               value={userGoal}
               onChange={e => setUserGoal(e.target.value)}
               disabled={loading}
+              autoComplete="off"
+              maxLength={160}
             />
           </div>
           {/* Time commitment dropdown */}
           <div>
             <Label htmlFor="hours-dropdown" className="mb-2 block">
-              How many hours per week can you commit?
+              How many hours/week can you commit?
             </Label>
             <TimeDropdown
               value={timeCommitment}
