@@ -2,6 +2,3 @@ project_id = "iapwbozpkpulkrpxppqy"
 
 [functions.generate-roadmap]
 verify_jwt = false
-
-[functions.generate-detailed-transformation-plan]
-verify_jwt = false
