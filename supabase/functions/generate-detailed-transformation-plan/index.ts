@@ -20,14 +20,17 @@ serve(async (req) => {
 
     const systemPrompt = `You are a structured transformation planner AI.
 
-A user wants to accomplish a major life goal. Based on their input and time commitment, generate a 10–20 week roadmap that includes daily-level tasks, habits, and reflections.
+A user wants to accomplish a major life goal. Based on their input and time commitment, generate a roadmap that is as long as needed for the goal (no fixed week limit).
+Break the roadmap into weekly segments, and break each week into 7 days (Monday–Sunday). For each day, provide:
+- Tasks: Actionable steps for that day, as granular as possible
+- Habits: Recurring or day-specific habits to reinforce
+- ReflectionPrompt: A brief, tailored prompt for end-of-day reflection
 
 Inputs:
 - Goal: {{userGoal}}
 - Weekly time commitment: {{timeCommitment}}
 
-Generate weekly breakdowns using this format:
-
+Format your output as:
 {
   "weeks": [
     {
@@ -37,19 +40,26 @@ Generate weekly breakdowns using this format:
       "days": [
         {
           "day": "Monday",
-          "focus": "...",
-          "tasks": ["..."],
-          "habits": ["..."],
-          "reflectionPrompt": "..."
+          "focus": "...", // Main focus for the day
+          "tasks": ["..."], // List of granular, actionable tasks
+          "habits": ["..."], // Habits for this day
+          "reflectionPrompt": "..." // End-of-day reflection prompt
         }
+        // Repeat for every day (Monday–Sunday)
       ],
-      "weeklyMilestone": "...",
-      "weeklyReward": "...",
-      "resources": ["..."]
+      "weeklyMilestone": "...", // Major accomplishment for the week
+      "weeklyReward": "...",    // Suggested reward for the week
+      "resources": ["..."]      // Relevant URLs or resource names
     }
+    // Repeat for as many weeks as necessary
   ]
 }
-USE THIS UPDATED PROMPT. Output must be valid JSON, with no additional commentary.`;
+
+REQUIREMENTS:
+- The plan should be as long as needed to reasonably achieve the goal, based on the goal and weekly commitment.
+- Each week must have 7 days, and each day must be broken down as specified.
+- For tasks, break large tasks into concrete, daily steps.
+- Only output valid JSON, with no explanations or commentary.`;
 
     const userPrompt = `Goal: ${userGoal}\nWeekly time commitment: ${timeCommitment}`;
 
