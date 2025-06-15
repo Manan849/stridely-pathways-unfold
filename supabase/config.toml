@@ -1,4 +1,5 @@
+
 project_id = "iapwbozpkpulkrpxppqy"
 
-[functions.generate-roadmap]
+[functions.generate-detailed-transformation-plan]
 verify_jwt = false

@@ -1,12 +1,24 @@
 
 import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type Day = {
+  day: string;
+  focus: string;
+  tasks: string[];
+  habits: string[];
+  reflectionPrompt: string;
+};
 
 type Week = {
   week: number;
-  skills: string[];
-  habits: string[];
-  milestone: string;
+  theme: string;
+  summary: string;
+  weeklyMilestone: string;
+  weeklyReward: string;
   resources: string[];
+  days: Day[];
 };
 
 type TransformationPlan = {
@@ -19,112 +31,95 @@ type Props = {
 
 const bgCard = "#F2F2F7";
 
-const TransformationPlanCards: React.FC<Props> = ({ transformationPlan }) => {
+export default function TransformationPlanCards({ transformationPlan }: Props) {
   if (!transformationPlan?.weeks || transformationPlan.weeks.length === 0) {
     return (
       <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg" style={{ background: bgCard }}>
-        Your roadmap will appear here after you generate a plan.
+        Enter a goal to receive your personalized transformation roadmap.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 mb-6">
+    <div className="flex flex-col gap-8 mb-8">
       {transformationPlan.weeks.map((week, idx) => (
         <WeekCard week={week} key={week.week || idx} />
       ))}
     </div>
   );
-};
+}
 
-const WeekCard: React.FC<{ week: Week }> = ({ week }) => {
-  const [habitsState, setHabitsState] = useState<boolean[]>(() =>
-    week.habits ? Array(week.habits.length).fill(false) : []
-  ); // Local state for checkboxes
-
-  return (
-    <div
-      className="rounded-2xl p-7 md:p-8 mb-0 flex flex-col gap-6 shadow-card"
-      style={{ background: bgCard }}
-    >
-      {/* Title */}
-      <h2 className="text-2xl font-bold text-primary mb-2">{`Week ${week.week}`}</h2>
-
-      {/* Skills to Build */}
-      <div>
-        <div className="font-medium mb-1">Skills to Build</div>
-        <ul className="list-disc ml-5 text-base marker:text-accent/80">
-          {week.skills.map((skill, i) => (
-            <li key={i}>{skill}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Habits */}
-      <div>
-        <div className="font-medium mb-1">Habits</div>
-        <div className="flex flex-col gap-2">
-          {week.habits.map((habit, i) => (
-            <label key={i} className="inline-flex items-center gap-2 text-base cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={habitsState[i] || false}
-                onChange={() =>
-                  setHabitsState(prev => {
-                    const arr = [...prev];
-                    arr[i] = !arr[i];
-                    return arr;
-                  })
-                }
-                className="form-checkbox rounded text-blue-600 accent-blue-500 focus:ring-blue-400"
-              />
-              <span className={habitsState[i] ? "line-through text-primary/40" : ""}>{habit}</span>
-            </label>
-          ))}
+const WeekCard: React.FC<{ week: Week }> = ({ week }) => (
+  <Card className="rounded-2xl p-7 md:p-8 bg-section mb-0 flex flex-col gap-6 shadow-card" style={{ background: bgCard }}>
+    <div>
+      <h2 className="text-2xl font-bold text-primary mb-1">{`Week ${week.week} – ${week.theme}`}</h2>
+      <div className="text-primary/80 text-base mb-2">{week.summary}</div>
+    </div>
+    <div className="flex flex-col gap-2 md:flex-row md:gap-6">
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="font-semibold flex items-center gap-2">🎯 Milestone: <span className="font-normal">{week.weeklyMilestone}</span></div>
+        <div className="font-semibold flex items-center gap-2">🎁 Reward: <span className="font-normal">{week.weeklyReward}</span></div>
+        <div className="font-semibold flex items-center gap-2">📚 Resources:
+          <span className="font-normal flex flex-col gap-1">
+            {week.resources.map((r, i) => {
+              // Try to split as "title – url"
+              const arr = r.split("–").map(x => x.trim());
+              if (arr.length >= 2) {
+                return (
+                  <a key={i} href={arr[1]} className="underline text-blue-600" target="_blank" rel="noopener noreferrer">
+                    {arr[0]}
+                  </a>
+                );
+              }
+              return (
+                <span key={i}>{r}</span>
+              );
+            })}
+          </span>
         </div>
       </div>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+      {week.days.map((day, i) => (
+        <DayCard day={day} key={i} />
+      ))}
+    </div>
+  </Card>
+);
 
-      {/* Milestone */}
+const DayCard: React.FC<{ day: Day }> = ({ day }) => {
+  const [habits, setHabits] = useState(Array(day.habits.length).fill(false));
+  return (
+    <div className="bg-white rounded-xl shadow-card p-4 flex flex-col gap-2">
+      <div className="font-bold text-primary mb-1">{`${day.day} – ${day.focus}`}</div>
       <div>
-        <div className="font-medium mb-1">Milestone</div>
-        <span className="inline-block px-3 py-1 rounded-full text-gray-700 text-sm font-semibold bg-gray-200">{week.milestone}</span>
-      </div>
-
-      {/* Resources */}
-      <div>
-        <div className="font-medium mb-1">Resources</div>
-        <ul className="flex flex-col gap-2 ml-1">
-          {week.resources.map((r, i) => {
-            // Extract link if present
-            const urlRegex = /https?:\/\/[^\s]+/;
-            const match = r.match(urlRegex);
-            let title = r;
-            let url;
-            if (match) {
-              url = match[0];
-              title = r.replace(urlRegex, "").replace(/\s*[-–—:]\s*$/, "").trim();
-            }
-            return (
-              <li key={i}>
-                {url ? (
-                  <a
-                    href={url}
-                    className="text-[#007AFF] underline font-medium"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {title ? `${title} – ` : ""}{url.replace(/^https?:\/\//, "")}
-                  </a>
-                ) : (
-                  <span>{title}</span>
-                )}
-              </li>
-            );
-          })}
+        <div className="font-medium mb-1">📝 Tasks</div>
+        <ul className="list-disc ml-5 text-base marker:text-accent/80">
+          {day.tasks.map((task, i) => (
+            <li key={i}>{task}</li>
+          ))}
         </ul>
+      </div>
+      {day.habits && day.habits.length > 0 && (
+        <div>
+          <div className="font-medium mb-1">✅ Habits</div>
+          <div className="flex flex-col gap-2">
+            {day.habits.map((h, i) => (
+              <label key={i} className="inline-flex items-center gap-2 text-base cursor-pointer select-none">
+                <Checkbox checked={habits[i]} onCheckedChange={() => setHabits(prev => {
+                  const arr = [...prev];
+                  arr[i] = !arr[i];
+                  return arr;
+                })} />
+                <span className={habits[i] ? "line-through text-primary/40" : ""}>{h}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <span className="italic text-primary/70">🪞 {day.reflectionPrompt}</span>
       </div>
     </div>
   );
 };
-
-export default TransformationPlanCards;
