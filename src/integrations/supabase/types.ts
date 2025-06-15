@@ -9,7 +9,115 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      habit_progress: {
+        Row: {
+          checked_habits: boolean[]
+          id: string
+          milestone_completed: boolean
+          plan_id: string | null
+          updated_at: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          checked_habits: boolean[]
+          id?: string
+          milestone_completed?: boolean
+          plan_id?: string | null
+          updated_at?: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          checked_habits?: boolean[]
+          id?: string
+          milestone_completed?: boolean
+          plan_id?: string | null
+          updated_at?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reflections: {
+        Row: {
+          ai_response: Json | null
+          created_at: string
+          id: string
+          plan_id: string | null
+          reflection: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          ai_response?: Json | null
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          reflection: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          ai_response?: Json | null
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          reflection?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reflections_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_plans: {
+        Row: {
+          created_at: string
+          current_week_index: number
+          goal: string
+          id: string
+          plan: Json
+          time_commitment: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_week_index?: number
+          goal: string
+          id?: string
+          plan: Json
+          time_commitment: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_week_index?: number
+          goal?: string
+          id?: string
+          plan?: Json
+          time_commitment?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

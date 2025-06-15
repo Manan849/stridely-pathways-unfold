@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
 import Account from "./pages/Account";
+import { UserProvider } from "@/hooks/useUser";
 
 const queryClient = new QueryClient();
 
@@ -17,19 +18,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <div className="pt-16"> {/* Padding for fixed navbar */}
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/plan" element={<Plan />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="/account" element={<Account />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
+      <UserProvider>
+        <BrowserRouter>
+          <Navbar />
+          <div className="pt-16">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/plan" element={<Plan />} />
+              <Route path="/progress" element={<Progress />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </UserProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
