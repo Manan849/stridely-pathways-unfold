@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
+import Header from "./components/Header";
 import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
 import Account from "./pages/Account";
@@ -21,6 +22,7 @@ const AppContent = () => {
 
   return (
     <BrowserRouter>
+      <Header />
       <Navbar />
       <div className="pt-16">
         <Routes>

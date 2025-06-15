@@ -7,8 +7,6 @@ import TimeDropdown from "@/components/TimeDropdown";
 import React, { useState } from "react";
 import { usePlan } from "@/context/PlanContext";
 import { toast } from "@/hooks/use-toast";
-// Import Supabase ANON key
-import { SUPABASE_ANON_KEY } from "@/integrations/supabase/client"; // We'll use the actual key, see below.
 import { supabase } from "@/integrations/supabase/client";
 
 // Helper: get the ANON key from the client file as a constant.
@@ -81,7 +79,7 @@ export default function NextBigGoalCard() {
         <div className="flex flex-col gap-6">
           <div>
             <Label htmlFor="user-goal" className="mb-2 block font-semibold">
-              What’s your next big goal?
+              What's your next big goal?
             </Label>
             <Input
               id="user-goal"
