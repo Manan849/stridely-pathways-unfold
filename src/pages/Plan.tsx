@@ -17,7 +17,14 @@ export default function PlanPage() {
   );
 }
 
+// Updated: supply plan meta as needed for dynamic fetching/generation
 function TransformationPlanCardsWrapper() {
-  const { transformationPlan } = usePlan();
-  return <TransformationPlanCards transformationPlan={transformationPlan} />;
+  const { userGoal, timeCommitment } = usePlan();
+
+  // Provide the minimal info needed for dynamic content generation
+  const planMeta = userGoal && timeCommitment
+    ? { userGoal, timeCommitment }
+    : null;
+
+  return <TransformationPlanCards transformationPlan={planMeta} />;
 }
