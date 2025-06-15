@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { usePlan } from "@/context/PlanContext";
@@ -30,46 +29,30 @@ export default function RoadmapOverview({ planMeta }: { planMeta: PlanMeta | nul
     setError(null);
     setLoading(false);
 
-    // Fetch week 1 to infer totalWeeks if needed, then fetch remaining weeks summaries
     (async () => {
       setLoading(true);
-      const summaries: WeekSummary[] = [];
-      let N = planMeta.totalWeeks || DEFAULT_TOTAL_WEEKS;
-      for (let w = 1; w <= N; w++) {
-        try {
-          const res = await fetch(
-            "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userGoal: planMeta.userGoal,
-                timeCommitment: planMeta.timeCommitment,
-                week: w,
-                totalWeeks: N,
-              }),
-            }
-          );
-          if (!res.ok) {
-            const { error } = await res.json();
-            throw new Error(error || "Failed to fetch week.");
+      try {
+        const res = await fetch(
+          "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userGoal: planMeta.userGoal,
+              timeCommitment: planMeta.timeCommitment,
+              totalWeeks: planMeta.totalWeeks || 12,
+              mode: "overview"
+            }),
           }
-          const { weekData } = await res.json();
-          if (w === 1 && weekData?.totalWeeks && weekData.totalWeeks > 1) {
-            setTotalWeeks(weekData.totalWeeks);
-            N = weekData.totalWeeks;
-          }
-          summaries.push({
-            week: weekData.week,
-            theme: weekData.theme,
-            summary: weekData.summary,
-            weeklyMilestone: weekData.weeklyMilestone,
-          });
-          setWeekSummaries([...summaries]); // so UI updates as they arrive
-        } catch (e: any) {
-          setError(e.message || "Failed to load a week.");
-          break;
+        );
+        if (!res.ok) {
+          const { error } = await res.json();
+          throw new Error(error || "Failed to fetch overview.");
         }
+        const { weekSummaries } = await res.json();
+        setWeekSummaries(weekSummaries || []);
+      } catch (e: any) {
+        setError(e.message || "Failed to load overview.");
       }
       setLoading(false);
     })();
@@ -102,7 +85,7 @@ export default function RoadmapOverview({ planMeta }: { planMeta: PlanMeta | nul
 
   return (
     <div className="flex flex-col gap-4 mb-8">
-      <div className="mb-4 text-xl font-bold text-primary">Roadmap Overview ({totalWeeks} weeks)</div>
+      <div className="mb-4 text-xl font-bold text-primary">Roadmap Overview ({weekSummaries.length} weeks)</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {weekSummaries.map((w) => (
           <div key={w.week}>
@@ -117,7 +100,7 @@ export default function RoadmapOverview({ planMeta }: { planMeta: PlanMeta | nul
         ))}
         {loading && (
           <div className="col-span-full text-center text-primary/60">
-            Loading more weeks...
+            Loading weeks...
           </div>
         )}
       </div>
