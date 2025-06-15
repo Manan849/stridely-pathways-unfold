@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TimeDropdown from "@/components/TimeDropdown";
+import WeeklyRoadmapCard from "@/components/WeeklyRoadmapCard";
 
 const FAKE_AI_RESPONSE = {
   weeks: [
@@ -84,41 +85,21 @@ const Plan = () => {
       </div>
 
       {/* Roadmap Result */}
-      {roadmap && (
-        <div className="mt-10 rounded-xl bg-section shadow-card p-8">
-          <h3 className="text-lg font-semibold mb-4">Your 12-Week Roadmap</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-y-2 text-left">
-              <thead>
-                <tr className="text-primary/70 text-sm">
-                  <th className="py-2 pr-4 font-semibold">Week</th>
-                  <th className="py-2 pr-4 font-semibold">Skills</th>
-                  <th className="py-2 pr-4 font-semibold">Habits</th>
-                  <th className="py-2 pr-4 font-semibold">Milestone</th>
-                  <th className="py-2 pr-4 font-semibold">Resources</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roadmap.weeks.map((w: any, i: number) => (
-                  <tr key={i} className="bg-white rounded-lg shadow border">
-                    <td className="py-3 pr-4 font-bold text-primary">{w.week}</td>
-                    <td className="py-3 pr-4">
-                      <ul className="list-disc ml-4">{w.skills.map((s: string, idx: number) => <li key={idx}>{s}</li>)}</ul>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <ul className="list-disc ml-4">{w.habits.map((h: string, idx: number) => <li key={idx}>{h}</li>)}</ul>
-                    </td>
-                    <td className="py-3 pr-4">{w.milestone}</td>
-                    <td className="py-3 pr-4">
-                      <ul className="list-disc ml-4">{w.resources.map((r: string, idx: number) => <li key={idx}>{r}</li>)}</ul>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="flex flex-col gap-6 mb-6">
+        {roadmap?.weeks && roadmap.weeks.length > 0 ? (
+          roadmap.weeks.map((w: any, i: number) => (
+            <WeeklyRoadmapCard
+              key={w.week || i}
+              week={w}
+              persistKey={`stridely-wk-habits-${w.week}`}
+            />
+          ))
+        ) : (
+          <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
+            Your roadmap will appear here once you set your next big goal.
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
