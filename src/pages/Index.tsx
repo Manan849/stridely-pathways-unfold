@@ -5,14 +5,14 @@ import NextBigGoalCard from "@/components/NextBigGoalCard";
 const Index = () => {
   return (
     <PlanProvider>
-      <div className="min-h-screen bg-background flex flex-col justify-center items-center font-inter">
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center font-sfpro">
         {/* Brand Hero */}
         <div className="w-full max-w-3xl px-4 py-16 flex flex-col items-center gap-8">
 
           <NextBigGoalCard />
 
           <header className="flex flex-col items-center gap-3">
-            <span className="inline-block rounded-full bg-accent/10 px-4 py-2 text-accent font-semibold text-sm tracking-widest mb-2">
+            <span className="inline-block rounded-full bg-accent/10 px-4 py-2 text-accent font-semibold text-sm tracking-widest mb-2 shadow-card">
               STRIDELY
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-3 text-center leading-tight">
@@ -28,7 +28,7 @@ const Index = () => {
 
           {/* Example Roadmap Card */}
           <section className="w-full py-8 flex flex-col items-center">
-            <div className="bg-section rounded-section card-shadow w-full max-w-xl mx-auto p-8 flex flex-col gap-5">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-card w-full max-w-xl mx-auto p-8 flex flex-col gap-5 transition hover:shadow-modal hover:scale-[1.015] duration-150">
               <div className="flex items-center gap-3 mb-2">
                 <span className="w-2.5 h-2.5 bg-accent rounded-full inline-block"></span>
                 <span className="uppercase text-xs font-semibold tracking-widest text-accent">WEEKLY ROADMAP</span>
@@ -50,7 +50,7 @@ const Index = () => {
 
           {/* Call to Action */}
           <div className="flex flex-col items-center gap-4 mt-10">
-            <button className="button-ios flex items-center gap-2 text-lg group">
+            <button className="button-ios flex items-center gap-2 text-lg group font-sfpro shadow-modal bg-accent hover:bg-primary/90 rounded-full min-h-[44px] px-8 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
               Start Your Journey
               <ArrowRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
