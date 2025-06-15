@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,20 +8,21 @@ import { usePlan } from "@/context/PlanContext";
 import { toast } from "@/hooks/use-toast";
 
 export default function NextBigGoalCard() {
-  const { userGoal, setUserGoal, timeCommitment, setTimeCommitment, setTransformationPlan } = usePlan();
+  const { userGoal, setUserGoal, timeCommitment, setTimeCommitment, setTransformationPlan, userId } = usePlan();
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
+        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-or-fetch-roadmap",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
+            user_id: userId,
             userGoal,
             timeCommitment
           })
@@ -32,11 +32,11 @@ export default function NextBigGoalCard() {
         const { error } = await res.json();
         throw new Error(error || "Failed to generate roadmap.");
       }
-      const { plan } = await res.json();
-      if (!plan?.weeks) {
+      const { roadmap } = await res.json();
+      if (!roadmap?.weeks) {
         throw new Error("No roadmap data found.");
       }
-      setTransformationPlan(plan);
+      setTransformationPlan(roadmap);
       toast({
         title: "Success!",
         description: "Transformation plan generated.",
