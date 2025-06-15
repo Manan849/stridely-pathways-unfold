@@ -1,8 +1,9 @@
-
-// New: Only fetches/generates each week as requested, stores visited weeks in state
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import DayDetailView from "@/components/DayDetailView";
 
 type Day = {
   day: string;
@@ -23,11 +24,9 @@ type Week = {
 };
 
 type DynamicTransformationPlan = {
-  // Only populated weeks
   [weekIdx: number]: Week | undefined;
 };
 
-// We start not knowing how many weeks there are until user specifies!
 type Props = {
   transformationPlan: { userGoal?: string; timeCommitment?: string; totalWeeks?: number } | null;
 };
@@ -41,6 +40,7 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
   const [totalWeeks, setTotalWeeks] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
 
   // Try to get an initial totalWeeks estimate, then allow user to advance beyond
   useEffect(() => {
@@ -92,10 +92,12 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
   // Navigation logic
   function handlePrev() {
     if (currentWeekIdx > 1) setCurrentWeekIdx(i => i - 1);
+    setSelectedDay(null);
   }
   function handleNext() {
     setCurrentWeekIdx(i => i + 1);
     fetchWeek(currentWeekIdx + 1);
+    setSelectedDay(null);
   }
 
   // On currentWeekIdx changed, fetch if not already present
@@ -133,9 +135,24 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
     );
   }
 
+  if (selectedDay) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Button 
+          variant="outline" 
+          onClick={() => setSelectedDay(null)}
+          className="self-start"
+        >
+          ← Back to Week Overview
+        </Button>
+        <DayDetailView day={selectedDay} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 mb-8">
-      <WeekCard week={currentWeek} key={currentWeek.week || currentWeekIdx} />
+      <WeekCard week={currentWeek} onDayClick={setSelectedDay} key={currentWeek.week || currentWeekIdx} />
       <div className="flex flex-row gap-4 justify-center">
         <button
           className="px-4 py-2 rounded-md bg-gray-200 text-primary font-semibold disabled:opacity-50"
@@ -158,7 +175,7 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
   );
 }
 
-const WeekCard: React.FC<{ week: Week }> = ({ week }) => (
+const WeekCard: React.FC<{ week: Week; onDayClick: (day: Day) => void }> = ({ week, onDayClick }) => (
   <Card className="rounded-2xl p-7 md:p-8 bg-section mb-0 flex flex-col gap-6 shadow-card" style={{ background: bgCard }}>
     <div>
       <h2 className="text-2xl font-bold text-primary mb-1">{`Week ${week.week} – ${week.theme}`}</h2>
@@ -187,30 +204,44 @@ const WeekCard: React.FC<{ week: Week }> = ({ week }) => (
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
       {week.days.map((day, i) => (
-        <DayCard day={day} key={i} />
+        <DayCard day={day} onDayClick={onDayClick} key={i} />
       ))}
     </div>
   </Card>
 );
 
-const DayCard: React.FC<{ day: Day }> = ({ day }) => {
+const DayCard: React.FC<{ day: Day; onDayClick: (day: Day) => void }> = ({ day, onDayClick }) => {
   const [habits, setHabits] = useState(Array(day.habits.length).fill(false));
+  
   return (
     <div className="bg-white rounded-xl shadow-card p-4 flex flex-col gap-2">
-      <div className="font-bold text-primary mb-1">{`${day.day} – ${day.focus}`}</div>
+      <div className="flex justify-between items-start">
+        <div className="font-bold text-primary mb-1">{`${day.day} – ${day.focus}`}</div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDayClick(day)}
+          className="p-1 h-auto"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
       <div>
         <div className="font-medium mb-1">📝 Tasks</div>
         <ul className="list-disc ml-5 text-base marker:text-accent/80">
-          {day.tasks.map((task, i) => (
+          {day.tasks.slice(0, 2).map((task, i) => (
             <li key={i}>{task}</li>
           ))}
+          {day.tasks.length > 2 && (
+            <li className="text-gray-500">+ {day.tasks.length - 2} more...</li>
+          )}
         </ul>
       </div>
       {day.habits && day.habits.length > 0 && (
         <div>
           <div className="font-medium mb-1">✅ Habits</div>
           <div className="flex flex-col gap-2">
-            {day.habits.map((h, i) => (
+            {day.habits.slice(0, 2).map((h, i) => (
               <label key={i} className="inline-flex items-center gap-2 text-base cursor-pointer select-none">
                 <Checkbox checked={habits[i]} onCheckedChange={() => setHabits(prev => {
                   const arr = [...prev];
@@ -220,12 +251,20 @@ const DayCard: React.FC<{ day: Day }> = ({ day }) => {
                 <span className={habits[i] ? "line-through text-primary/40" : ""}>{h}</span>
               </label>
             ))}
+            {day.habits.length > 2 && (
+              <span className="text-sm text-gray-500">+ {day.habits.length - 2} more habits...</span>
+            )}
           </div>
         </div>
       )}
-      <div>
-        <span className="italic text-primary/70">🪞 {day.reflectionPrompt}</span>
-      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onDayClick(day)}
+        className="mt-2"
+      >
+        View Day Details
+      </Button>
     </div>
   );
 };
