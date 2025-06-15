@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState } from "react";
 
-type DayPlan = {
+type Day = {
   day: string;
   focus: string;
   tasks: string[];
@@ -9,18 +8,18 @@ type DayPlan = {
   reflectionPrompt: string;
 };
 
-type WeekPlan = {
+type Week = {
   week: number;
   theme: string;
   summary: string;
   weeklyMilestone: string;
   weeklyReward: string;
   resources: string[];
-  days: DayPlan[];
+  days: Day[];
 };
 
 type TransformationPlan = {
-  weeks: WeekPlan[];
+  weeks: Week[];
 };
 
 type PlanContextType = {
@@ -60,4 +59,3 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const usePlan = () => useContext(PlanContext);
-

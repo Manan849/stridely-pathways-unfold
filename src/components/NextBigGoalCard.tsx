@@ -3,25 +3,20 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { usePlan } from "@/context/PlanContext";
 import TimeDropdown from "@/components/TimeDropdown";
-import React, { useState, useEffect } from "react";
-import { toast } from "@/components/ui/use-toast";
+import React, { useState } from "react";
+import { usePlan } from "@/context/PlanContext";
+import { toast } from "@/hooks/use-toast";
 
 export default function NextBigGoalCard() {
   const { userGoal, setUserGoal, timeCommitment, setTimeCommitment, setTransformationPlan } = usePlan();
   const [loading, setLoading] = useState(false);
 
-  // If the user changes the goal or time, always make inputs usable again
-  useEffect(() => {
-    setLoading(false);
-  }, [userGoal, timeCommitment]);
-
   const handleGenerate = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan`,
+        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
         {
           method: "POST",
           headers: {
@@ -37,14 +32,14 @@ export default function NextBigGoalCard() {
         const { error } = await res.json();
         throw new Error(error || "Failed to generate roadmap.");
       }
-      const { roadmap } = await res.json();
-      if (!roadmap || !roadmap.weeks) {
+      const { plan } = await res.json();
+      if (!plan?.weeks) {
         throw new Error("No roadmap data found.");
       }
-      setTransformationPlan(roadmap);
+      setTransformationPlan(plan);
       toast({
         title: "Success!",
-        description: "Transformation plan generated."
+        description: "Transformation plan generated.",
       });
     } catch (error: any) {
       toast({
@@ -58,15 +53,14 @@ export default function NextBigGoalCard() {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto mb-8 bg-white rounded-2xl">
+    <Card className="w-full max-w-lg mx-auto mb-8 bg-white shadow-card border border-gray-100 rounded-2xl">
       <CardHeader>
         <CardTitle>Your Next Big Goal</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-6">
-          {/* Goal input */}
           <div>
-            <Label htmlFor="user-goal" className="mb-2 block">
+            <Label htmlFor="user-goal" className="mb-2 block font-semibold">
               What’s your next big goal?
             </Label>
             <Input
@@ -75,23 +69,23 @@ export default function NextBigGoalCard() {
               value={userGoal}
               onChange={e => setUserGoal(e.target.value)}
               disabled={loading}
-              autoComplete="off"
-              maxLength={160}
             />
           </div>
-          {/* Time commitment dropdown */}
           <div>
-            <Label htmlFor="hours-dropdown" className="mb-2 block">
+            <Label htmlFor="hours-dropdown" className="mb-2 block font-semibold">
               How many hours/week can you commit?
             </Label>
             <TimeDropdown
               value={timeCommitment}
               onChange={setTimeCommitment}
-              disabled={loading}
             />
           </div>
-          {/* Generate button */}
-          <Button className="w-full mt-4" onClick={handleGenerate} disabled={loading || !userGoal || !timeCommitment}>
+          <Button
+            className="w-full mt-4 bg-[#007AFF] hover:bg-[#005bb5] text-white text-lg font-bold py-3 rounded-xl shadow-card transition-button"
+            onClick={handleGenerate}
+            disabled={loading || !userGoal || !timeCommitment}
+            size="lg"
+          >
             {loading ? "Generating..." : "Generate My Transformation Plan"}
           </Button>
         </div>

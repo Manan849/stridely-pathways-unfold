@@ -1,20 +1,23 @@
 
 import React from "react";
+import { PlanProvider, usePlan } from "@/context/PlanContext";
 import NextBigGoalCard from "@/components/NextBigGoalCard";
 import TransformationPlanCards from "@/components/TransformationPlanCards";
-import { usePlan } from "@/context/PlanContext";
 
-const Plan = () => {
-  const { transformationPlan } = usePlan();
-
+export default function PlanPage() {
   return (
-    <main className="bg-white min-h-screen pt-24 pb-12 px-3 md:px-0 flex flex-col gap-10">
-      <NextBigGoalCard />
-      <div className="w-full max-w-3xl mx-auto">
-        <TransformationPlanCards transformationPlan={transformationPlan} />
+    <PlanProvider>
+      <div className="pt-24 max-w-4xl mx-auto px-4 min-h-screen">
+        <div className="mb-8">
+          <NextBigGoalCard />
+        </div>
+        <TransformationPlanCardsWrapper />
       </div>
-    </main>
+    </PlanProvider>
   );
-};
+}
 
-export default Plan;
+function TransformationPlanCardsWrapper() {
+  const { transformationPlan } = usePlan();
+  return <TransformationPlanCards transformationPlan={transformationPlan} />;
+}
