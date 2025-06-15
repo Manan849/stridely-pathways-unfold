@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TimeDropdown from "@/components/TimeDropdown";
 import WeeklyRoadmapCard from "@/components/WeeklyRoadmapCard";
+import ThisWeekProgress from "@/components/ThisWeekProgress";
 
 const FAKE_AI_RESPONSE = {
   weeks: [
@@ -18,26 +19,59 @@ const FAKE_AI_RESPONSE = {
   ],
 };
 
+const PLAN_PERSIST_KEY = "stridely-plan";
+const PROGRESS_KEY = "stridely-progress-history";
+
 const Plan = () => {
   const [goal, setGoal] = useState("");
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [roadmap, setRoadmap] = useState<any | null>(null);
+  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [progressHistory, setProgressHistory] = useState<boolean[]>([]);
+
+  // Sync progress history from localStorage
+  useEffect(() => {
+    // Could be loaded from DB if user is logged in in the future.
+    const stored = localStorage.getItem(PROGRESS_KEY);
+    if (roadmap?.weeks && Array.isArray(roadmap.weeks)) {
+      setProgressHistory(
+        stored
+          ? JSON.parse(stored)
+          : Array(roadmap.weeks.length).fill(false)
+      );
+    }
+  }, [roadmap]);
+
+  // Reset currentWeekIndex on new plan
+  useEffect(() => {
+    setCurrentWeekIndex(0);
+  }, [roadmap]);
+
+  // Persist progressHistory changes
+  useEffect(() => {
+    if (progressHistory && roadmap?.weeks?.length) {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressHistory));
+    }
+  }, [progressHistory, roadmap]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setRoadmap(null);
 
-    // Simulate API call
+    // Simulate API call and plan generation
     setTimeout(() => {
       setLoading(false);
       setRoadmap(FAKE_AI_RESPONSE);
+      setProgressHistory(Array(FAKE_AI_RESPONSE.weeks.length).fill(false));
+      setCurrentWeekIndex(0);
     }, 1200);
   };
 
+  // Responsive layout: stack on mobile, 2 columns on md+
   return (
-    <div className="pt-28 max-w-2xl mx-auto px-4">
+    <div className="pt-28 max-w-4xl mx-auto px-4">
       <div className="mb-12">
         <div className="rounded-2xl bg-white shadow-card border border-gray-100 p-8 flex flex-col gap-8">
           {/* Section Title */}
@@ -83,22 +117,71 @@ const Plan = () => {
           </form>
         </div>
       </div>
-
-      {/* Roadmap Result */}
-      <div className="flex flex-col gap-6 mb-6">
-        {roadmap?.weeks && roadmap.weeks.length > 0 ? (
-          roadmap.weeks.map((w: any, i: number) => (
-            <WeeklyRoadmapCard
-              key={w.week || i}
-              week={w}
-              persistKey={`stridely-wk-habits-${w.week}`}
-            />
-          ))
-        ) : (
-          <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
-            Your roadmap will appear here once you set your next big goal.
+      {/* Roadmap and Progress Section */}
+      <div className="flex flex-col md:flex-row md:gap-8 items-start">
+        {/* Main Roadmap (left on desktop, below on mobile) */}
+        <div className="flex-1 w-full">
+          <div className="flex flex-col gap-6 mb-6">
+            {roadmap?.weeks && roadmap.weeks.length > 0 ? (
+              roadmap.weeks.map((w: any, i: number) => (
+                <WeeklyRoadmapCard
+                  key={w.week || i}
+                  week={w}
+                  persistKey={`stridely-wk-habits-${w.week}`}
+                />
+              ))
+            ) : (
+              <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
+                Your roadmap will appear here once you set your next big goal.
+              </div>
+            )}
           </div>
-        )}
+        </div>
+        {/* Progress Sidebar (right on desktop, above on mobile) */}
+        <div className="w-full md:w-[350px] shrink-0 md:sticky md:top-28">
+          <ThisWeekProgress
+            currentWeek={
+              roadmap?.weeks && roadmap.weeks.length > 0
+                ? roadmap.weeks[currentWeekIndex]
+                : null
+            }
+            currentWeekIndex={currentWeekIndex}
+            totalWeeks={roadmap?.weeks?.length || 0}
+            persistPrefix={"stridely"}
+            progressHistory={progressHistory}
+            setProgressHistory={setProgressHistory}
+            onWeekComplete={undefined}
+          />
+          {roadmap?.weeks?.length > 1 && (
+            <div className="flex flex-wrap gap-3 mt-2 justify-center md:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-medium"
+                disabled={currentWeekIndex === 0}
+                onClick={() => setCurrentWeekIndex((i) => Math.max(0, i - 1))}
+              >
+                ← Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-medium"
+                disabled={
+                  !roadmap?.weeks ||
+                  currentWeekIndex >= roadmap.weeks.length - 1
+                }
+                onClick={() =>
+                  setCurrentWeekIndex((i) =>
+                    Math.min(roadmap.weeks.length - 1, i + 1)
+                  )
+                }
+              >
+                Next →
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
