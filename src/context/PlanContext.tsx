@@ -1,25 +1,8 @@
+
 import React, { createContext, useContext, useState } from "react";
 
-type Day = {
-  day: string;
-  focus: string;
-  tasks: string[];
-  habits: string[];
-  reflectionPrompt: string;
-};
-
-type Week = {
-  week: number;
-  theme: string;
-  summary: string;
-  weeklyMilestone: string;
-  weeklyReward: string;
-  resources: string[];
-  days: Day[];
-};
-
 type TransformationPlan = {
-  weeks: Week[];
+  weeks: any[];
 };
 
 type PlanContextType = {
