@@ -5,18 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePlan } from "@/context/PlanContext";
 import TimeDropdown from "@/components/TimeDropdown";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 export default function NextBigGoalCard() {
   const { userGoal, setUserGoal, timeCommitment, setTimeCommitment, setTransformationPlan } = usePlan();
   const [loading, setLoading] = useState(false);
 
+  // If the user changes the goal or time, always make inputs usable again
+  useEffect(() => {
+    setLoading(false);
+  }, [userGoal, timeCommitment]);
+
   const handleGenerate = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan`, // Updated function
+        `https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan`,
         {
           method: "POST",
           headers: {
@@ -82,6 +87,7 @@ export default function NextBigGoalCard() {
             <TimeDropdown
               value={timeCommitment}
               onChange={setTimeCommitment}
+              disabled={loading}
             />
           </div>
           {/* Generate button */}
