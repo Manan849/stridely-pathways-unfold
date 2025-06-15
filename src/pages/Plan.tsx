@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TimeDropdown from "@/components/TimeDropdown";
 import WeeklyRoadmapCard from "@/components/WeeklyRoadmapCard";
 import ThisWeekProgress from "@/components/ThisWeekProgress";
+import WeeklyCheckIn from "@/components/WeeklyCheckIn";
 
 const FAKE_AI_RESPONSE = {
   weeks: [
@@ -29,6 +29,10 @@ const Plan = () => {
   const [roadmap, setRoadmap] = useState<any | null>(null);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [progressHistory, setProgressHistory] = useState<boolean[]>([]);
+
+  // Control for displaying Weekly Check-In:
+  const [showWeeklyCheckIn, setShowWeeklyCheckIn] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<null | { habits?: string[]; milestone?: string; focus?: string }>(null);
 
   // Sync progress history from localStorage
   useEffect(() => {
@@ -67,6 +71,55 @@ const Plan = () => {
       setProgressHistory(Array(FAKE_AI_RESPONSE.weeks.length).fill(false));
       setCurrentWeekIndex(0);
     }, 1200);
+  };
+
+  // Trigger Weekly Check-In if: all progress is checked/completed for the week
+  useEffect(() => {
+    if (!roadmap?.weeks || !roadmap.weeks[currentWeekIndex]) {
+      setShowWeeklyCheckIn(false);
+      return;
+    }
+    // All habits checked & milestone done
+    const weekProgressKey = `stridely-progress-week-${roadmap.weeks[currentWeekIndex].week}`;
+    const checkedHabits = localStorage.getItem(weekProgressKey + "-habits");
+    const habitsDone = checkedHabits && JSON.parse(checkedHabits).every(Boolean);
+    const milestoneDone = localStorage.getItem(weekProgressKey + "-milestone");
+    const isMilestoneDone = milestoneDone && JSON.parse(milestoneDone);
+    // Or: Plan end of week, e.g., Sunday
+    const today = new Date();
+    const isSunday = today.getDay() === 0;
+
+    if ((habitsDone && isMilestoneDone) || isSunday) {
+      setShowWeeklyCheckIn(true);
+    } else {
+      setShowWeeklyCheckIn(false);
+    }
+  }, [roadmap, currentWeekIndex]);
+
+  // Handler: Accept AI's Plan Update
+  const handleAcceptUpdate = (updates: { habits?: string[]; milestone?: string; focus?: string }) => {
+    setPendingUpdate(null);
+    // Mutate *next* week
+    if (
+      roadmap &&
+      roadmap.weeks &&
+      roadmap.weeks.length > currentWeekIndex + 1
+    ) {
+      const weeks = [...roadmap.weeks];
+      const next = { ...weeks[currentWeekIndex + 1] };
+      if (updates.habits) next.habits = updates.habits;
+      if (updates.milestone) next.milestone = updates.milestone;
+      // Could also use focus, etc.
+      weeks[currentWeekIndex + 1] = next;
+      setRoadmap({ ...roadmap, weeks });
+    }
+    setShowWeeklyCheckIn(false);
+  };
+
+  // Handler: skip reflection
+  const handleSkipUpdate = () => {
+    setPendingUpdate(null);
+    setShowWeeklyCheckIn(false);
   };
 
   // Responsive layout: stack on mobile, 2 columns on md+
@@ -152,6 +205,15 @@ const Plan = () => {
             setProgressHistory={setProgressHistory}
             onWeekComplete={undefined}
           />
+          {/* Weekly Check-In section */}
+          {showWeeklyCheckIn && roadmap?.weeks && roadmap.weeks[currentWeekIndex] && (
+            <WeeklyCheckIn
+              goal={goal}
+              weekData={roadmap.weeks[currentWeekIndex]}
+              onAccept={handleAcceptUpdate}
+              onSkip={handleSkipUpdate}
+            />
+          )}
           {roadmap?.weeks?.length > 1 && (
             <div className="flex flex-wrap gap-3 mt-2 justify-center md:justify-end">
               <Button

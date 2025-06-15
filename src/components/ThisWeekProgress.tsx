@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -158,7 +157,12 @@ const ThisWeekProgress: React.FC<Props> = ({
             {currentWeek.milestone}
           </Badge>
           <label className="flex items-center gap-2">
-            <Checkbox checked={milestoneChecked} onCheckedChange={setMilestoneChecked} />
+            <Checkbox
+              checked={milestoneChecked}
+              onCheckedChange={val => {
+                setMilestoneChecked(!!val);
+              }}
+            />
             <span className="text-sm text-primary/70 select-none">Mark as done</span>
           </label>
         </div>
