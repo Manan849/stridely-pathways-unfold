@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -113,14 +112,41 @@ The final output should feel like a personalized blueprint guiding the user clea
 
     const data = await aiRes.json();
 
-    // Extract code block, in case the AI escapes JSON
     let plan;
     try {
-      // Try best to extract JSON from possible code block etc.
       const content = data.choices?.[0]?.message?.content;
-      const jsonMatch = content.match(/```json([\s\S]*?)```/);
-      plan = JSON.parse(jsonMatch ? jsonMatch[1] : content);
+      let jsonText = null;
+
+      // Try to extract code block: ```json ... ```
+      let match = content.match(/```json\s*([\s\S]*?)```/);
+      if (match && match[1]) {
+        jsonText = match[1];
+      } else {
+        // Try plain code block: ```
+        match = content.match(/```([\s\S]*?)```/);
+        if (match && match[1]) {
+          jsonText = match[1];
+        }
+      }
+      if (!jsonText) {
+        // As fallback, extract substring from first { to last }
+        const firstBrace = content.indexOf("{");
+        const lastBrace = content.lastIndexOf("}");
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          jsonText = content.substring(firstBrace, lastBrace + 1);
+        } else {
+          // Just try raw
+          jsonText = content;
+        }
+      }
+
+      // Remove markdown artifacts and whitespace
+      jsonText = jsonText.replace(/^[\s\n\r]+|[\s\n\r]+$/g, "");
+
+      // Parse
+      plan = JSON.parse(jsonText);
     } catch (e) {
+      console.error("Failed to parse AI response:", e, data.choices?.[0]?.message?.content);
       return new Response(JSON.stringify({ error: "Failed to parse AI response." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
