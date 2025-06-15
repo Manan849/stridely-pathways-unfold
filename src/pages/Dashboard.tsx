@@ -5,27 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { quickStats, roadmaps } from '@/data/mockDashboardData';
 
 const Dashboard = () => {
   const { user } = useUser();
-
-  // Dummy data for now, we can connect this to the backend later
-  const quickStats = {
-    activeRoadmaps: 1,
-    completionRate: 75,
-    currentStreak: 5,
-  };
-
-  const roadmaps = [
-    {
-      id: '1',
-      name: 'Run a Half Marathon',
-      progress: 60,
-      currentPosition: 'Week 3, Day 5',
-      nextMilestone: 'Run 10km without stopping',
-    },
-    // We can add more roadmaps here
-  ];
 
   return (
     <div className="pt-20 pb-6 px-2 sm:pt-20 sm:pb-10 sm:px-4 md:pt-24 md:pb-16 md:px-6 max-w-4xl mx-auto min-h-screen">
