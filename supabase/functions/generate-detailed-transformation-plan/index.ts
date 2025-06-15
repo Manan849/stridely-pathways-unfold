@@ -19,50 +19,42 @@ serve(async (req) => {
 
     const systemPrompt = `You are a structured transformation planner AI.
 
-A user wants to accomplish a major life goal. Based on their input and time commitment, generate a roadmap that is as long as required to realistically achieve the goal — do not limit the plan length or number of weeks.
+A user wants to accomplish a major life goal. Based on their input and time commitment, generate a roadmap that is as long as required to realistically achieve the goal—do not limit plan length or number of weeks.
 
-Break the roadmap into weekly segments, and break each week into exactly 7 days (Monday–Sunday). For each day, further break down into:
-
-- "focus": The top priority or learning area of the day.
-- "tasks": A list containing all actionable steps for that day. Split large actions into multiple fine-grained steps, so a user always knows what to do next.
-- "habits": List of recurring habits, plus any habits unique to that day.
-- "reflectionPrompt": A short, customized end-of-day reflection prompt.
-
-Inputs:
-- Goal: {{userGoal}}
-- Weekly time commitment: {{timeCommitment}}
-
-Respond ONLY with valid JSON using this structure:
+For each week, output EXACTLY in this structure (field order and casing must be precise):
 
 {
   "weeks": [
     {
       "week": 1,
-      "theme": "...",
+      "theme": "Foundation",
       "summary": "...",
+      "weeklyMilestone": "...",
+      "weeklyReward": "...",
+      "resources": ["Title – URL"],
       "days": [
         {
           "day": "Monday",
-          "focus": "...", // Today's main focus (string)
-          "tasks": ["..."], // Granular, ordered steps for the day
-          "habits": ["..."], // Habits to reinforce today
-          "reflectionPrompt": "..." // End-of-day prompt
+          "focus": "Skill introduction",
+          "tasks": ["Do X", "Do Y"],
+          "habits": ["Read for 30 mins", "No phone before 10AM"],
+          "reflectionPrompt": "What did you learn today?"
         }
-        // Provide 7 days per week, in order (Monday–Sunday)
-      ],
-      "weeklyMilestone": "...", // The major achievement/checkpoint for this week
-      "weeklyReward": "...",    // Suggested reward after this week's milestone
-      "resources": ["..."]      // Relevant links, articles, or resource names
+        // Repeat for Tuesday–Sunday, always as a 7-item array with this structure
+      ]
     }
-    // Repeat for as many weeks as necessary, without any upper limit
+    // Repeat for as many weeks as necessary, never limit roadmap length
   ]
 }
 
-IMPORTANT:
-- Do NOT limit the number of weeks. The plan should be as long as needed based on the goal and time commitment.
-- Each week MUST include exactly 7 days, always with detailed breakdown for every day.
-- Large actions should be split into multiple, clear sub-tasks for each day.
-- Only output valid JSON. Do not include any explanations, extra commentary, or formatting besides the JSON itself.`;
+Instructions:
+- Always include "week", "theme", "summary", "weeklyMilestone", "weeklyReward", "resources", and "days" (as an array of 7 objects, one per day, Monday–Sunday, each object as shown above) in each week.
+- In "resources", every entry must be in the format: Title – URL
+- In "days", each object must exactly follow: "day", "focus", "tasks", "habits", "reflectionPrompt".
+- For "tasks", split large items into granular steps.
+- "habits" may include recurring and day-specific habits.
+- "reflectionPrompt" must be a tailored question for the day.
+- Do NOT include any extra commentary, formatting, or explanations—ONLY output valid JSON strictly matching the structure above.`;
 
     const userPrompt = `Goal: ${userGoal}\nWeekly time commitment: ${timeCommitment}`;
 
