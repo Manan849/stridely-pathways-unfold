@@ -142,10 +142,18 @@ The final output should feel like a personalized blueprint guiding the user clea
         }
       }
 
-      // Remove markdown artifacts and whitespace
+      // Remove markdown artifacts and leading/trailing whitespace
       jsonText = jsonText.replace(/^[\s\n\r]+|[\s\n\r]+$/g, "");
+      // Remove any wrapping backticks or triple-backticks that might still be there
+      jsonText = jsonText.replace(/^`{1,3}(json)?/, "").replace(/`{1,3}$/, "").trim();
 
-      // Parse
+      // Remove illegal control characters (except for \n, \r, \t)
+      jsonText = jsonText.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+
+      // Log for debugging (won't leak secrets, only data structure)
+      console.log("Extracted JSON for parsing:", jsonText.slice(0, 500));
+
+      // Parse the JSON
       plan = JSON.parse(jsonText);
     } catch (e) {
       console.error("Failed to parse AI response:", e, data.choices?.[0]?.message?.content);
