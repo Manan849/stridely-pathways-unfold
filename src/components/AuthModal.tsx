@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { BadgeCheck } from "lucide-react"; // Lucide icon for Google
+import { BadgeCheck } from "lucide-react";
 
 const AuthModal = ({
   open,
@@ -25,21 +25,42 @@ const AuthModal = ({
     setPending(true);
     setError("");
 
+    console.log(`Attempting ${tab} with email:`, email);
+
     try {
       if (tab === "signIn") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) setError(error.message);
-        else onOpenChange(false);
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
+        console.log('Sign in response:', data, error);
+        
+        if (error) {
+          console.error('Sign in error:', error);
+          setError(error.message);
+        } else {
+          console.log('Sign in successful');
+          onOpenChange(false);
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
-        if (error) setError(error.message);
-        else {
+        console.log('Sign up response:', data, error);
+        
+        if (error) {
+          console.error('Sign up error:', error);
+          setError(error.message);
+        } else {
+          console.log('Sign up successful');
           toast({
             title: "Check your email",
             description: "Please verify your address to finish signing up.",
@@ -47,6 +68,9 @@ const AuthModal = ({
           onOpenChange(false);
         }
       }
+    } catch (err) {
+      console.error('Auth error:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setPending(false);
     }
@@ -55,12 +79,26 @@ const AuthModal = ({
   const signInWithGoogle = async () => {
     setPending(true);
     setError("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (error) {
-      setError(error.message);
+    
+    console.log('Attempting Google sign in...');
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { 
+          redirectTo: `${window.location.origin}/` 
+        },
+      });
+      console.log('Google auth response:', data, error);
+      
+      if (error) {
+        console.error('Google auth error:', error);
+        setError(error.message);
+        setPending(false);
+      }
+    } catch (err) {
+      console.error('Google auth error:', err);
+      setError('Failed to sign in with Google. Please try again.');
       setPending(false);
     }
   };
@@ -108,7 +146,7 @@ const AuthModal = ({
         <div className="mt-3 text-center text-sm">
           {tab === "signIn" ? (
             <>
-              Don’t have an account?{" "}
+              Don't have an account?{" "}
               <button className="text-accent underline" onClick={() => setTab("signUp")} disabled={pending}>Sign Up</button>
             </>
           ) : (
@@ -122,4 +160,5 @@ const AuthModal = ({
     </Dialog>
   );
 };
+
 export default AuthModal;
