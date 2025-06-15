@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,9 +10,29 @@ import Navbar from "./components/Navbar";
 import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
 import Account from "./pages/Account";
-import { UserProvider } from "@/hooks/useUser";
+import { UserProvider, useUser } from "@/hooks/useUser";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const { user } = useUser();
+
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <div className="pt-16">
+        <Routes>
+          <Route path="/" element={user ? <Dashboard /> : <Index />} />
+          <Route path="/plan" element={<Plan />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -19,18 +40,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <UserProvider>
-        <BrowserRouter>
-          <Navbar />
-          <div className="pt-16">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/plan" element={<Plan />} />
-              <Route path="/progress" element={<Progress />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
+        <AppContent />
       </UserProvider>
     </TooltipProvider>
   </QueryClientProvider>

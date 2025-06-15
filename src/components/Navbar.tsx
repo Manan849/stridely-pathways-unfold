@@ -1,5 +1,4 @@
-
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 import { User } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useUser } from "@/hooks/useUser";
@@ -29,7 +28,9 @@ const Navbar = () => {
     >
       <div className="max-w-3xl mx-auto flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
         {/* Brand */}
-        <div className="font-extrabold text-xl text-black tracking-tight pr-2">Stridely</div>
+        <Link to="/" className="font-extrabold text-xl text-black tracking-tight pr-2">
+          Stridely
+        </Link>
         {/* Nav Links and Actions */}
         <div className="flex items-center gap-1 sm:gap-3">
           <NavLink
