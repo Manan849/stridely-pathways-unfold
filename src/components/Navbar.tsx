@@ -27,15 +27,15 @@ const Navbar = () => {
       }`}
       style={{ minHeight: 56 }}
     >
-      <div className="max-w-3xl mx-auto flex items-center justify-between px-4 py-3">
+      <div className="max-w-3xl mx-auto flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
         {/* Brand */}
-        <div className="font-extrabold text-xl text-black tracking-tight">Stridely</div>
-        {/* Nav Links */}
-        <div className="flex items-center gap-2">
+        <div className="font-extrabold text-xl text-black tracking-tight pr-2">Stridely</div>
+        {/* Nav Links and Actions */}
+        <div className="flex items-center gap-1 sm:gap-3">
           <NavLink
             to="/plan"
             className={({ isActive }) =>
-              `px-4 py-2 font-semibold text-sm rounded-md transition-colors ${
+              `px-3 sm:px-4 py-2 font-semibold text-sm rounded-md transition-colors ${
                 isActive
                   ? "text-accent bg-accent/10"
                   : "text-primary/80 hover:text-accent"
@@ -47,7 +47,7 @@ const Navbar = () => {
           <NavLink
             to="/progress"
             className={({ isActive }) =>
-              `px-4 py-2 font-semibold text-sm rounded-md transition-colors ${
+              `px-3 sm:px-4 py-2 font-semibold text-sm rounded-md transition-colors ${
                 isActive
                   ? "text-accent bg-accent/10"
                   : "text-primary/80 hover:text-accent"
@@ -59,7 +59,7 @@ const Navbar = () => {
           <NavLink
             to="/account"
             className={({ isActive }) =>
-              `p-2 rounded-full transition-colors ${
+              `p-2 sm:p-2.5 rounded-full transition-colors ${
                 isActive
                   ? "text-accent bg-accent/10"
                   : "text-primary/80 hover:text-accent"
@@ -71,7 +71,7 @@ const Navbar = () => {
           </NavLink>
           {/* Auth Section */}
           {user ? (
-            <div className="relative group ml-2">
+            <div className="relative group ml-1 sm:ml-3">
               <Button
                 variant="ghost"
                 size="icon"
@@ -96,7 +96,12 @@ const Navbar = () => {
             </div>
           ) : (
             <>
-              <Button onClick={() => setAuthOpen(true)} className="ml-2" size="sm">
+              <Button
+                onClick={() => setAuthOpen(true)}
+                className="ml-1 sm:ml-3 w-24 min-w-[88px] h-9 sm:h-11 px-0 sm:px-1 text-base font-bold rounded-full"
+                style={{ maxWidth: "110px" }}
+                size="default"
+              >
                 Sign In
               </Button>
               <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
