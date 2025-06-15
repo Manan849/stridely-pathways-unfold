@@ -40,11 +40,19 @@ const Plan = () => {
     }
   }, [progressHistory, roadmap]);
 
+  // Ensure when the AI action completes, update the state using setState pattern:
+  // Replace setRoadmap(roadmap) with setState("transformationPlan", roadmap)
+  // For this context, we alias setRoadmap = value => setState("transformationPlan", value) for clarity.
+  const setState = (key: string, value: any) => {
+    if (key === "transformationPlan") setRoadmap(value);
+    // ... add more keys if needed ...
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setRoadmap(null);
+    setState("transformationPlan", null);
 
     try {
       const res = await fetch(
@@ -70,7 +78,7 @@ const Plan = () => {
       }
       const { roadmap } = await res.json();
       if (!roadmap || !roadmap.weeks) throw new Error("No roadmap data found.");
-      setRoadmap(roadmap);
+      setState("transformationPlan", roadmap);
       setProgressHistory(Array(roadmap.weeks.length).fill(false));
       setCurrentWeekIndex(0);
       toast({

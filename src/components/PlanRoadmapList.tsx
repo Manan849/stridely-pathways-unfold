@@ -1,5 +1,5 @@
-
 import WeeklyRoadmapCard from "@/components/WeeklyRoadmapCard";
+import TransformationPlanCards from "./TransformationPlanCards";
 
 type PlanRoadmapListProps = {
   loading: boolean;
@@ -7,23 +7,13 @@ type PlanRoadmapListProps = {
 };
 
 const PlanRoadmapList = ({ loading, roadmap }: PlanRoadmapListProps) => (
-  <div className="flex flex-col gap-6 mb-6">
+  <div>
     {loading ? (
-      <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
+      <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg" style={{ background: "#F2F2F7" }}>
         Generating your personalized roadmap...
       </div>
-    ) : roadmap?.weeks && roadmap.weeks.length > 0 ? (
-      roadmap.weeks.map((w: any, i: number) => (
-        <WeeklyRoadmapCard
-          key={w.week || i}
-          week={w}
-          persistKey={`stridely-wk-habits-${w.week}`}
-        />
-      ))
     ) : (
-      <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
-        Your roadmap will appear here once you set your next big goal.
-      </div>
+      <TransformationPlanCards transformationPlan={roadmap} />
     )}
   </div>
 );
