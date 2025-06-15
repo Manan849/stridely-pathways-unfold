@@ -17,56 +17,83 @@ serve(async (req) => {
   try {
     const { userGoal, timeCommitment } = await req.json();
 
+    // --- NEW ARCHITECTURAL PROMPT BELOW ---
     const prompt = `
-You are a structured transformation planner AI.
+### 🚀 Comprehensive Roadmap Generation Architecture
 
-A user has a life goal and a weekly time commitment. Generate a personalized roadmap to help them reach their goal in 10–20 weeks. Each week should be structured and broken down by day.
+**Purpose:**
+To generate a deeply personalized, actionable, structured, and psychologically engaging transformation roadmap to guide users from setting a life goal to achieving measurable success over a period of 10–20 weeks.
 
-Input:
-- Goal: ${userGoal}
-- Weekly Time: ${timeCommitment}
+### 📐 Roadmap Architectural Overview:
 
-For each week return the following fields:
-- week (number)
-- theme (short motivational label)
-- summary (1-sentence weekly goal)
-- weeklyMilestone (one achievement for the week)
-- weeklyReward (fun reward for motivation)
-- resources (1–2 relevant links, output as "Title – URL")
-- days (7 days per week, array)
+**1. Weekly Breakdown:**
+* Clearly numbered (Week 1, Week 2, ...).
+* Each week has a specific motivational **theme**.
+* Includes a concise and motivational **weekly summary**.
+* Defines one major **weekly milestone** (clear, actionable outcome).
+* Suggests one appealing **weekly reward** for completing all activities (psychological reinforcement).
+* Provides curated **resources** (1–2 links, videos, books, tools).
 
-Each day object must have:
-- day (e.g. Monday)
-- focus (1-sentence day goal)
-- tasks (2–3 to-dos, short, <45 min each)
-- habits (small actions to track, 1–3)
-- reflectionPrompt (a sentence to reflect on)
+**2. Daily Breakdown:**
+Each week comprises 7 clearly structured daily segments. Each day includes:
+* **Day name** (Monday, Tuesday, etc.).
+* **Daily focus**: Clear one-line description of the day's primary objective.
+* **Tasks**: 2–3 short, specific tasks (<45 minutes each), realistic for the chosen time commitment.
+* **Habits**: 1–3 clearly defined habits aligned with the weekly theme, consistently trackable.
+* **Reflection Prompt**: Thought-provoking question designed to deepen understanding and solidify learning.
 
-Output the response as JSON structured like:
+### 🌟 Psychological Considerations:
+* Ensure progressive difficulty (week 1 easier, gradually more challenging).
+* Balance cognitive, practical, and emotional elements in tasks and habits.
+* Introduce periodic days focused on rest, reflection, and consolidation of learning (e.g., Sundays).
 
+### 🎯 Detailed AI Prompt for Comprehensive Roadmap Generation:
+
+**You are a highly structured, personalized AI-driven transformation planner.**
+A user has shared their ambitious life goal and their weekly available time commitment. Your role is to create a deeply engaging and meticulously structured transformation roadmap to empower them to achieve significant measurable progress within a timeframe of 10–20 weeks.
+
+**Inputs:**
+* **User Goal:** ${userGoal}
+* **Weekly Available Time:** ${timeCommitment}
+
+Based on these inputs, construct a highly detailed roadmap following this exact structure:
+
+**Overall JSON Output Format:**
+
+\`\`\`json
 {
   "weeks": [
     {
       "week": 1,
-      "theme": "...",
-      "summary": "...",
-      "weeklyMilestone": "...",
-      "weeklyReward": "...",
-      "resources": ["..."],
+      "theme": "[Motivational Weekly Theme]",
+      "summary": "[Brief motivational sentence summarizing week's focus and intent]",
+      "weeklyMilestone": "[Clear and measurable achievement by week's end]",
+      "weeklyReward": "[Enjoyable, psychologically appealing reward]",
+      "resources": ["Resource Name – URL", "Resource Name – URL"],
       "days": [
         {
           "day": "Monday",
-          "focus": "...",
-          "tasks": ["...", "..."],
-          "habits": ["...", "..."],
-          "reflectionPrompt": "..."
+          "focus": "[Brief daily goal summary]",
+          "tasks": ["Task 1 (specific)", "Task 2 (specific)", "Task 3 (optional)"],
+          "habits": ["Habit 1 (specific, daily recurring)", "Habit 2 (optional)"],
+          "reflectionPrompt": "[Deeply engaging and reflective question prompting insight and emotional connection]"
         }
       ]
     }
   ]
 }
+\`\`\`
 
-DO NOT LIMIT TO EXACTLY 10–20 WEEKS — use as many weeks as are required to logically reach the goal. Each week must contain exactly 7 days with unique, practical content.
+### 🧩 Instructions for Crafting the Roadmap:
+* **Personalization:** Tailor every task, habit, milestone, and reflection prompt specifically to the user's stated goal.
+* **Practicality:** Tasks must be realistically achievable within the user’s weekly time commitment.
+* **Depth & Clarity:** Tasks and habits must be explicit, detailed, actionable, and unambiguous.
+* **Psychological Reinforcement:** Use positive reinforcement techniques in weekly rewards to sustain motivation.
+* **Progressive Structure:** Gradually increase complexity and difficulty week-over-week.
+* **Reflection and Integration:** Ensure each reflection prompt encourages introspection, self-awareness, emotional intelligence, and cognitive integration.
+* **Resource Curation:** Choose highly relevant, credible, and practical resources to support skill-building and knowledge acquisition.
+
+The final output should feel like a personalized blueprint guiding the user clearly, motivating them consistently, and deeply engaging their mind and emotions, ultimately transforming their ambition into reality.
 `;
 
     const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
