@@ -4,6 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import DayDetailView from "@/components/DayDetailView";
+import { useWeeklyData } from "@/hooks/useWeeklyData";
+import { usePlan } from "@/context/PlanContext";
 
 type Day = {
   day: string;
@@ -34,83 +36,44 @@ type Props = {
 const bgCard = "#F2F2F7";
 
 export default function TransformationPlanCards({ transformationPlan }: Props) {
-  // Store each loaded/generated week's data using a mapping
-  const [weeksByIndex, setWeeksByIndex] = useState<DynamicTransformationPlan>({});
-  const [currentWeekIdx, setCurrentWeekIdx] = useState(1); // 1-based user-facing
-  const [totalWeeks, setTotalWeeks] = useState<number | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentWeekIdx, setCurrentWeekIdx] = useState(1);
   const [selectedDay, setSelectedDay] = useState<Day | null>(null);
+  const { planId } = usePlan();
+  const { weeklyData, fetchWeekData, loading, error } = useWeeklyData(planId);
 
-  // Try to get an initial totalWeeks estimate, then allow user to advance beyond
+  const currentWeek = weeklyData[currentWeekIdx];
+
   useEffect(() => {
-    setError(null);
-    if (!transformationPlan?.userGoal || !transformationPlan.timeCommitment) return;
-    if (Object.keys(weeksByIndex).length === 0 && !loading) {
-      fetchWeek(1);
-    }
-    // eslint-disable-next-line
-  }, [transformationPlan]);
-
-  async function fetchWeek(weekNumber: number) {
-    if (weeksByIndex[weekNumber]) return; // already fetched
-    setLoading(true);
-    setError(null);
-    try {
-      // As totalWeeks might be unknown, fetch totalWeeks from plan or use a fallback (e.g. 12)
-      const baseWeeks = transformationPlan?.numberOfWeeks ?? 12;
-      setTotalWeeks(baseWeeks);
-      
-      const res = await fetch(
-        "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userGoal: transformationPlan?.userGoal,
-            timeCommitment: transformationPlan?.timeCommitment,
-            week: weekNumber,
-            totalWeeks: baseWeeks,
-          })
-        }
+    if (transformationPlan?.userGoal && transformationPlan.timeCommitment && !currentWeek && !loading) {
+      fetchWeekData(
+        currentWeekIdx,
+        transformationPlan.userGoal,
+        transformationPlan.timeCommitment,
+        transformationPlan.numberOfWeeks || 12
       );
-      if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error || "Failed to generate week.");
-      }
-      const { weekData } = await res.json();
-      if (!weekData) throw new Error("No week data found.");
-      setWeeksByIndex(prev => ({ ...prev, [weekNumber]: weekData }));
-    } catch (e: any) {
-      setError(e.message || "Unable to load content for this week.");
-    } finally {
-      setLoading(false);
     }
-  }
+  }, [currentWeekIdx, transformationPlan, currentWeek, loading, fetchWeekData]);
 
-  // Navigation logic
-  function handlePrev() {
+  const handlePrev = () => {
     if (currentWeekIdx > 1) setCurrentWeekIdx(i => i - 1);
     setSelectedDay(null);
-  }
-  function handleNext() {
-    const maxWeeks = totalWeeks || 12;
+  };
+
+  const handleNext = () => {
+    const maxWeeks = transformationPlan?.numberOfWeeks || 12;
     if (currentWeekIdx < maxWeeks) {
       setCurrentWeekIdx(i => i + 1);
-      fetchWeek(currentWeekIdx + 1);
+      if (transformationPlan?.userGoal && transformationPlan.timeCommitment) {
+        fetchWeekData(
+          currentWeekIdx + 1,
+          transformationPlan.userGoal,
+          transformationPlan.timeCommitment,
+          maxWeeks
+        );
+      }
     }
     setSelectedDay(null);
-  }
-
-  // On currentWeekIdx changed, fetch if not already present
-  useEffect(() => {
-    if (!weeksByIndex[currentWeekIdx]) {
-      fetchWeek(currentWeekIdx);
-    }
-    // eslint-disable-next-line
-  }, [currentWeekIdx]);
-
-  const currentWeek = weeksByIndex[currentWeekIdx];
+  };
 
   // UI rendering -- always only shows one week
   if (!transformationPlan?.userGoal || !transformationPlan.timeCommitment) {
@@ -147,7 +110,7 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
         >
           ← Back to Week Overview
         </Button>
-        <DayDetailView day={selectedDay} />
+        <DayDetailView day={selectedDay} planId={planId} />
       </div>
     );
   }
@@ -164,11 +127,11 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
           ← Previous
         </button>
         <div className="self-center text-primary font-semibold">
-          {`Week ${currentWeekIdx}` + (totalWeeks ? ` of ${totalWeeks}` : "")}
+          {`Week ${currentWeekIdx}` + (transformationPlan.numberOfWeeks ? ` of ${transformationPlan.numberOfWeeks}` : "")}
         </div>
         <button
           className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold disabled:opacity-50"
-          disabled={totalWeeks ? currentWeekIdx >= totalWeeks : false}
+          disabled={transformationPlan.numberOfWeeks ? currentWeekIdx >= transformationPlan.numberOfWeeks : false}
           onClick={handleNext}
         >
           Next →

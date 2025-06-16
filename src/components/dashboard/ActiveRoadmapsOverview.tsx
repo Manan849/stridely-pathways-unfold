@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,7 @@ const RoadmapCard = ({ plan }: { plan: UserPlan }) => {
   const currentDay = new Date().getDay() || 7; // Sunday = 7
   
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/plan')}>
+    <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/roadmap/${plan.id}`)}>
       <div className="mb-4">
         <h3 className="font-semibold text-lg mb-1 line-clamp-1">{plan.goal}</h3>
         <p className="text-sm text-gray-600">{plan.time_commitment}</p>

@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import TimeDropdown from "@/components/TimeDropdown";
 import React, { useState } from "react";
 import { usePlan } from "@/context/PlanContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcHdib3pwa3B1bGtycHhwcHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NTg0MjQsImV4cCI6MjA2NTUzNDQyNH0.Y4Gx54vceTvlnbG31z6gnskXsNUCaXobjhOPZo6Oa_E";
 
@@ -22,6 +23,7 @@ export default function NextBigGoalCard() {
     setNumberOfWeeks,
   } = usePlan();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -55,13 +57,16 @@ export default function NextBigGoalCard() {
         throw new Error("No roadmap data found.");
       }
       
-      // This will now save to database via the updated context
+      // This will save to database via the updated context
       await setTransformationPlan(roadmap);
       
       toast({
         title: "Success!",
         description: "Transformation plan generated and saved.",
       });
+
+      // Redirect to roadmap hub
+      navigate('/roadmap');
     } catch (error: any) {
       toast({
         variant: "destructive",

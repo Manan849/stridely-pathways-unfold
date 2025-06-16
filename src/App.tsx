@@ -11,6 +11,7 @@ import Header from "./components/Header";
 import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
 import Account from "./pages/Account";
+import RoadmapHub from "./pages/RoadmapHub";
 import { UserProvider, useUser } from "@/hooks/useUser";
 import { PlanProvider } from "@/context/PlanContext";
 import Dashboard from "./pages/Dashboard";
