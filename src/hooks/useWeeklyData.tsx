@@ -21,6 +21,11 @@ type Week = {
   days: Day[];
 };
 
+type PlanData = {
+  weeks?: Week[];
+  weeklyDetails?: { [key: number]: Week };
+};
+
 export const useWeeklyData = (planId?: string) => {
   const [weeklyData, setWeeklyData] = useState<{ [weekNumber: number]: Week }>({});
   const [loading, setLoading] = useState(false);
@@ -46,10 +51,13 @@ export const useWeeklyData = (planId?: string) => {
           .eq('id', planId)
           .single();
 
-        if (!error && data?.plan?.weeklyDetails?.[weekNumber]) {
-          const weekData = data.plan.weeklyDetails[weekNumber];
-          setWeeklyData(prev => ({ ...prev, [weekNumber]: weekData }));
-          return weekData;
+        if (!error && data?.plan) {
+          const planData = data.plan as PlanData;
+          if (planData.weeklyDetails?.[weekNumber]) {
+            const weekData = planData.weeklyDetails[weekNumber];
+            setWeeklyData(prev => ({ ...prev, [weekNumber]: weekData }));
+            return weekData;
+          }
         }
       } catch (err) {
         console.error('Error fetching stored week data:', err);
@@ -92,11 +100,12 @@ export const useWeeklyData = (planId?: string) => {
             .eq('id', planId)
             .single();
 
-          if (currentPlan) {
+          if (currentPlan?.plan) {
+            const currentPlanData = currentPlan.plan as PlanData;
             const updatedPlan = {
-              ...currentPlan.plan,
+              ...currentPlanData,
               weeklyDetails: {
-                ...currentPlan.plan.weeklyDetails,
+                ...(currentPlanData.weeklyDetails || {}),
                 [weekNumber]: weekData
               }
             };

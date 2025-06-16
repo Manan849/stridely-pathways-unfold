@@ -31,6 +31,7 @@ const AppContent = () => {
           <Route path="/plan" element={<Plan />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/roadmap/:planId?" element={<RoadmapHub />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
