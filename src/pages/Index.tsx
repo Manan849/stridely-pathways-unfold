@@ -1,15 +1,20 @@
+
 import { ArrowRight } from "lucide-react";
 import { PlanProvider } from "@/context/PlanContext";
 import NextBigGoalCard from "@/components/NextBigGoalCard";
+
 const Index = () => {
-  return <PlanProvider>
+  return (
+    <PlanProvider>
       <div className="min-h-screen bg-background flex flex-col justify-center items-center font-sfpro">
         {/* Brand Hero */}
         <div className="w-full max-w-3xl px-2 sm:px-4 py-10 sm:py-16 flex flex-col items-center gap-6 sm:gap-8">
           <NextBigGoalCard />
 
           <header className="flex flex-col items-center gap-2 sm:gap-3 w-full">
-            <span className="inline-block rounded-full bg-accent/10 px-4 py-2 font-semibold text-xs sm:text-sm tracking-widest mb-2 shadow-card text-slate-950">GENERATE DAILY PLANS</span>
+            <span className="inline-block rounded-full bg-accent/10 px-4 py-2 text-accent font-semibold text-xs sm:text-sm tracking-widest mb-2 shadow-card">
+              STRIDELY
+            </span>
             <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-extrabold mb-3 text-center leading-tight">
               <span className="heading-gradient">
                 Transform your goals into <span className="text-accent">action</span>
@@ -55,6 +60,8 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </PlanProvider>;
+    </PlanProvider>
+  );
 };
+
 export default Index;
