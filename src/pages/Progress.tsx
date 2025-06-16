@@ -1,15 +1,45 @@
 
-const Progress = () => {
+import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useProgressData } from '@/hooks/useProgressData';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { ActiveRoadmapsOverview } from '@/components/dashboard/ActiveRoadmapsOverview';
+import { DetailedProgressTracker } from '@/components/dashboard/DetailedProgressTracker';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import DashboardAnalytics from '@/components/DashboardAnalytics';
+
+export default function Progress() {
+  const isMobile = useIsMobile();
+  const { progressData, loading } = useProgressData();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 pb-6 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-32 bg-white rounded-2xl"></div>
+            <div className="h-64 bg-white rounded-2xl"></div>
+            <div className="h-96 bg-white rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="pt-24 max-w-2xl mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-4">Progress & Insights</h1>
-      <p className="mb-8">Track your completed weeks, streaks, and get insights here.</p>
-      {/* Placeholder: Streak and insight visualization goes here */}
-      <div className="rounded-xl bg-section p-8 shadow-card text-center text-primary/60">
-        <span>Keep going – your progress will show here soon!</span>
+    <div className={`min-h-screen bg-gray-50 pt-20 pb-6 px-2 sm:px-4 ${
+      isMobile ? 'max-w-full' : 'max-w-7xl mx-auto'
+    }`}>
+      <div className={`flex gap-6 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        {!isMobile && <DashboardSidebar />}
+        
+        <div className="flex-1 space-y-6">
+          <DashboardHeader progressData={progressData} />
+          <ActiveRoadmapsOverview />
+          <DetailedProgressTracker />
+          <DashboardAnalytics />
+        </div>
       </div>
     </div>
   );
-};
-
-export default Progress;
+}

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { usePlan } from "@/context/PlanContext";
+import { useUserPlans } from "@/hooks/useUserPlans";
 
 type WeekSummary = {
   week: number;
@@ -18,29 +19,37 @@ type PlanMeta = {
 
 export default function RoadmapOverview({ planMeta }: { planMeta: PlanMeta | null }) {
   const { transformationPlan } = usePlan();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { plans } = useUserPlans();
+  const [weekSummaries, setWeekSummaries] = useState<WeekSummary[]>([]);
 
-  // Show the final roadmap if it exists
-  const weekSummaries = transformationPlan.weeks.map(week => ({
-    week: week.week,
-    theme: week.theme,
-    summary: week.summary,
-    weeklyMilestone: week.weeklyMilestone,
-  }));
+  useEffect(() => {
+    // First try to get data from transformationPlan
+    if (transformationPlan?.weeks && transformationPlan.weeks.length > 0) {
+      const summaries = transformationPlan.weeks.map(week => ({
+        week: week.week,
+        theme: week.theme || `Week ${week.week} Focus`,
+        summary: week.summary || "Working on core fundamentals",
+        weeklyMilestone: week.weeklyMilestone || "Complete weekly goals",
+      }));
+      setWeekSummaries(summaries);
+    } 
+    // Fallback to stored plans
+    else if (plans.length > 0 && plans[0].plan?.weeks) {
+      const storedWeeks = plans[0].plan.weeks;
+      const summaries = storedWeeks.map((week: any) => ({
+        week: week.week,
+        theme: week.theme || `Week ${week.week} Focus`,
+        summary: week.summary || "Working on core fundamentals", 
+        weeklyMilestone: week.weeklyMilestone || week.milestone || "Complete weekly goals",
+      }));
+      setWeekSummaries(summaries);
+    }
+  }, [transformationPlan, plans]);
 
   if (!planMeta?.userGoal || !planMeta?.timeCommitment) {
     return (
       <div className="rounded-2xl bg-section shadow-card p-8 text-center text-primary/60 font-medium text-lg">
         Enter a goal above to view your roadmap overview.
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-2xl bg-red-100 shadow-card p-8 text-center text-red-500 font-medium text-lg">
-        {error}
       </div>
     );
   }

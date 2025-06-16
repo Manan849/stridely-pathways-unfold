@@ -34,7 +34,7 @@ async function storeSupabaseRoadmap(userId: string, userGoal: string, timeCommit
     time_commitment: timeCommitment,
     number_of_weeks: numberOfWeeks,
     plan,
-    current_week_index: 1
+    current_week_index: 0
   }];
   await fetch(url, {
     method: "POST",
@@ -64,38 +64,50 @@ serve(async (req) => {
     }
 
     if (!roadmap) {
-      const systemPrompt = `You are an AI life transformation planner.
+      const systemPrompt = `You are an AI life transformation planner specializing in creating detailed, actionable roadmaps.
 
-A user has entered a big life goal and a weekly time commitment. Your job is to generate a practical, structured roadmap to help them achieve this goal.
+A user has entered a big life goal and weekly time commitment. Create a comprehensive roadmap with rich, detailed content.
 
 Use the inputs:
-- Goal: {{userGoal}}
-- Weekly time commitment: {{timeCommitment}}
-- Number of weeks: {{numberOfWeeks}}
+- Goal: ${userGoal}
+- Weekly time commitment: ${timeCommitment}
+- Number of weeks: ${numberOfWeeks}
 
-Generate a roadmap spanning EXACTLY ${numberOfWeeks} weeks. Each week should include:
-- Skills to build
-- Habits to adopt
-- 1 milestone
-- 1–2 helpful resources (tools, videos, links, books)
+Generate EXACTLY ${numberOfWeeks} weeks. Each week MUST include:
+- A meaningful theme and summary
+- 3-5 specific skills to build
+- 3-4 daily habits to practice
+- 1 clear weekly milestone
+- 2-3 high-quality resources with real URLs
 
-Use this JSON format in your output:
+For resources, provide actual links to:
+- Free courses (Coursera, edX, Khan Academy, freeCodeCamp)
+- Documentation sites
+- YouTube tutorials
+- GitHub repositories
+- Tools and platforms
+- Books (with Amazon/Goodreads links)
+
+Use this exact JSON format:
 {
   "weeks": [
     {
       "week": 1,
-      "skills": ["Skill A", "Skill B"],
-      "habits": ["Daily journaling", "30-min reading"],
-      "milestone": "Finish Module 1 of [Course]",
+      "theme": "Foundation Building",
+      "summary": "Establish fundamental knowledge and create daily learning habits",
+      "skills": ["Basic syntax understanding", "Development environment setup", "Problem-solving fundamentals"],
+      "habits": ["Daily 1-hour coding practice", "Read technical documentation", "Join developer communities"],
+      "milestone": "Complete first coding project",
+      "weeklyMilestone": "Complete first coding project",
       "resources": [
-        "FreeCodeCamp – https://www.freecodecamp.org/",
-        "Notion Habit Tracker – https://notion.so/template"
+        "Python.org Official Tutorial – https://docs.python.org/3/tutorial/",
+        "freeCodeCamp Python Course – https://www.freecodecamp.org/learn/scientific-computing-with-python/"
       ]
-    },
-    ...
+    }
   ]
 }
-Make the output clear, simple, practical, and encouraging. Ensure you provide exactly ${numberOfWeeks} weeks.`;
+
+Make content specific to the goal "${userGoal}" and ensure all URLs are real and working.`;
 
       const userPrompt = `Goal: ${userGoal}\nWeekly time commitment: ${timeCommitment}\nNumber of weeks: ${numberOfWeeks}`;
       
@@ -112,7 +124,7 @@ Make the output clear, simple, practical, and encouraging. Ensure you provide ex
             { role: "user", content: userPrompt }
           ],
           temperature: 0.6,
-          max_tokens: 3000
+          max_tokens: 4000
         }),
       });
 

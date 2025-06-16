@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Target, Brain, CheckCircle2, Circle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/hooks/useUser';
+import { useToast } from '@/hooks/use-toast';
 
 type DayGoal = {
   id: string;
@@ -25,55 +28,137 @@ type DayDetailProps = {
     reflectionPrompt: string;
   };
   dayGoals?: DayGoal[];
+  planId?: string;
 };
 
-const DayDetailView: React.FC<DayDetailProps> = ({ day, dayGoals = [] }) => {
-  const [goals, setGoals] = useState<DayGoal[]>(dayGoals.length > 0 ? dayGoals : [
-    {
-      id: '1',
-      title: 'Morning Learning Session',
-      description: day.tasks[0] || 'Complete daily learning task',
-      estimatedTime: '45 min',
-      priority: 'high',
-      completed: false,
-      category: 'learning'
-    },
-    {
-      id: '2',
-      title: 'Practice Application',
-      description: day.tasks[1] || 'Apply what you learned today',
-      estimatedTime: '30 min',
-      priority: 'high',
-      completed: false,
-      category: 'practice'
-    },
-    {
-      id: '3',
-      title: 'Evening Reflection',
-      description: day.reflectionPrompt,
-      estimatedTime: '15 min',
-      priority: 'medium',
-      completed: false,
-      category: 'reflection'
-    }
-  ]);
-
+const DayDetailView: React.FC<DayDetailProps> = ({ day, dayGoals = [], planId }) => {
+  const { user } = useUser();
+  const { toast } = useToast();
+  const [goals, setGoals] = useState<DayGoal[]>([]);
   const [habits, setHabits] = useState(day.habits.map((habit, index) => ({
     id: index.toString(),
     name: habit,
     completed: false
   })));
+  const [loading, setLoading] = useState(false);
 
-  const toggleGoal = (goalId: string) => {
+  // Initialize goals from day data
+  useEffect(() => {
+    if (dayGoals.length > 0) {
+      setGoals(dayGoals);
+    } else {
+      const defaultGoals: DayGoal[] = [
+        {
+          id: '1',
+          title: 'Morning Learning Session',
+          description: day.tasks[0] || 'Complete daily learning task',
+          estimatedTime: '45 min',
+          priority: 'high',
+          completed: false,
+          category: 'learning'
+        },
+        {
+          id: '2',
+          title: 'Practice Application',
+          description: day.tasks[1] || 'Apply what you learned today',
+          estimatedTime: '30 min',
+          priority: 'high',
+          completed: false,
+          category: 'practice'
+        }
+      ];
+      
+      // Add additional tasks from day.tasks
+      day.tasks.slice(2).forEach((task, index) => {
+        defaultGoals.push({
+          id: `task-${index + 3}`,
+          title: `Task ${index + 3}`,
+          description: task,
+          estimatedTime: '20 min',
+          priority: 'medium',
+          completed: false,
+          category: 'practice'
+        });
+      });
+
+      // Add reflection if exists
+      if (day.reflectionPrompt) {
+        defaultGoals.push({
+          id: 'reflection',
+          title: 'Evening Reflection',
+          description: day.reflectionPrompt,
+          estimatedTime: '15 min',
+          priority: 'medium',
+          completed: false,
+          category: 'reflection'
+        });
+      }
+
+      setGoals(defaultGoals);
+    }
+  }, [day, dayGoals]);
+
+  const saveDailyProgress = async () => {
+    if (!user?.id || !planId) return;
+
+    setLoading(true);
+    try {
+      const tasksCompleted = goals.map(goal => goal.completed);
+      const habitsCompleted = habits.map(habit => habit.completed);
+
+      const { error } = await supabase
+        .from('daily_progress')
+        .upsert({
+          user_id: user.id,
+          plan_id: planId,
+          date: new Date().toISOString().split('T')[0],
+          tasks_completed: tasksCompleted,
+          habits_completed: habitsCompleted,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Progress Saved!",
+        description: "Your daily progress has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save progress. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleGoal = async (goalId: string) => {
     setGoals(prev => prev.map(goal => 
       goal.id === goalId ? { ...goal, completed: !goal.completed } : goal
     ));
+    await saveDailyProgress();
   };
 
-  const toggleHabit = (habitId: string) => {
+  const toggleHabit = async (habitId: string) => {
     setHabits(prev => prev.map(habit => 
       habit.id === habitId ? { ...habit, completed: !habit.completed } : habit
     ));
+    await saveDailyProgress();
+  };
+
+  const markDayComplete = async () => {
+    // Mark all goals and habits as complete
+    setGoals(prev => prev.map(goal => ({ ...goal, completed: true })));
+    setHabits(prev => prev.map(habit => ({ ...habit, completed: true })));
+    
+    await saveDailyProgress();
+    
+    toast({
+      title: "Day Complete! 🎉",
+      description: "Congratulations on completing all your daily goals!",
+    });
   };
 
   const getPriorityColor = (priority: DayGoal['priority']) => {
@@ -98,6 +183,7 @@ const DayDetailView: React.FC<DayDetailProps> = ({ day, dayGoals = [] }) => {
   const completedGoals = goals.filter(goal => goal.completed).length;
   const completedHabits = habits.filter(habit => habit.completed).length;
   const totalProgress = (completedGoals + completedHabits) / (goals.length + habits.length) * 100;
+  const isAllComplete = totalProgress === 100;
 
   return (
     <div className="space-y-6">
@@ -202,10 +288,12 @@ const DayDetailView: React.FC<DayDetailProps> = ({ day, dayGoals = [] }) => {
               </p>
             </div>
             <Button 
-              variant={totalProgress === 100 ? "default" : "outline"}
+              variant={isAllComplete ? "default" : "outline"}
               size="sm"
+              onClick={markDayComplete}
+              disabled={loading || isAllComplete}
             >
-              {totalProgress === 100 ? "Day Complete! 🎉" : "Keep Going"}
+              {isAllComplete ? "Day Complete! 🎉" : "Mark Day Complete"}
             </Button>
           </div>
         </CardContent>
