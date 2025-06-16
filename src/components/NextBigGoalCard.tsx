@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -55,10 +54,13 @@ export default function NextBigGoalCard() {
       if (!roadmap?.weeks) {
         throw new Error("No roadmap data found.");
       }
-      setTransformationPlan(roadmap);
+      
+      // This will now save to database via the updated context
+      await setTransformationPlan(roadmap);
+      
       toast({
         title: "Success!",
-        description: "Transformation plan generated.",
+        description: "Transformation plan generated and saved.",
       });
     } catch (error: any) {
       toast({

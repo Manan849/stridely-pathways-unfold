@@ -269,6 +269,7 @@ export type Database = {
           current_week_index: number
           goal: string
           id: string
+          number_of_weeks: number
           plan: Json
           time_commitment: string
           updated_at: string
@@ -279,6 +280,7 @@ export type Database = {
           current_week_index?: number
           goal: string
           id?: string
+          number_of_weeks?: number
           plan: Json
           time_commitment: string
           updated_at?: string
@@ -289,6 +291,7 @@ export type Database = {
           current_week_index?: number
           goal?: string
           id?: string
+          number_of_weeks?: number
           plan?: Json
           time_commitment?: string
           updated_at?: string

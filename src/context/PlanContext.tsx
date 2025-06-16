@@ -1,6 +1,6 @@
-
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
+import { useUserPlans } from "@/hooks/useUserPlans";
 
 type Day = {
   day: string;
@@ -60,14 +60,41 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [numberOfWeeks, setNumberOfWeeks] = useState<number>(12);
 
   const { user } = useUser();
+  const { plans, createPlan } = useUserPlans();
+
+  // Load the most recent plan when plans change
+  useEffect(() => {
+    if (plans.length > 0) {
+      const mostRecentPlan = plans[0];
+      setUserGoal(mostRecentPlan.goal);
+      setTimeCommitment(mostRecentPlan.time_commitment);
+      setNumberOfWeeks(mostRecentPlan.number_of_weeks);
+      setTransformationPlan(mostRecentPlan.plan);
+    }
+  }, [plans]);
+
+  // Override setTransformationPlan to also save to database
+  const handleSetTransformationPlan = async (plan: TransformationPlan) => {
+    setTransformationPlan(plan);
+    
+    if (user?.id && userGoal && timeCommitment && numberOfWeeks) {
+      await createPlan({
+        goal: userGoal,
+        time_commitment: timeCommitment,
+        number_of_weeks: numberOfWeeks,
+        plan,
+      });
+    }
+  };
 
   return (
     <PlanContext.Provider value={{
-      transformationPlan, setTransformationPlan,
+      transformationPlan, 
+      setTransformationPlan: handleSetTransformationPlan,
       userGoal, setUserGoal,
       timeCommitment, setTimeCommitment,
       numberOfWeeks, setNumberOfWeeks,
-      planId: (transformationPlan as any).id,
+      planId: plans.length > 0 ? plans[0].id : undefined,
       userId: user?.id,
     }}>
       {children}
