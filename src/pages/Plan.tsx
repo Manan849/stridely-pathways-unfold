@@ -4,16 +4,18 @@ import { PlanProvider, usePlan } from "@/context/PlanContext";
 import NextBigGoalCard from "@/components/NextBigGoalCard";
 import TransformationPlanCards from "@/components/TransformationPlanCards";
 import RoadmapOverview from "@/components/RoadmapOverview";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function PlanPage() {
   const [view, setView] = useState<"overview" | "detailed">("overview");
+  const isMobile = useIsMobile();
 
   return (
     <PlanProvider>
-      {/* Responsive: px-2 for small, px-4 tablet, px-6 desktop, more pt/pb on mobile */}
-      <div className="pt-20 pb-6 px-2 sm:pt-20 sm:pb-10 sm:px-4 md:pt-24 md:pb-16 md:px-6 max-w-4xl mx-auto min-h-screen">
+      <div className={`pt-20 pb-6 px-2 sm:pt-20 sm:pb-10 sm:px-4 md:pt-24 md:pb-16 md:px-6 mx-auto min-h-screen ${
+        isMobile ? "max-w-full" : "max-w-6xl"
+      }`}>
         <div className="mb-6 sm:mb-8">
-          {/* Adjust spacing at the top on mobile */}
           <NextBigGoalCard />
         </div>
 
@@ -41,7 +43,6 @@ export default function PlanPage() {
           </button>
         </div>
 
-        {/* Add a little more vertical padding to these sections for mobile */}
         <div className="w-full">
           {view === "overview" && <TransformationPlanOverviewWrapper />}
           {view === "detailed" && <TransformationPlanCardsWrapper />}
@@ -51,24 +52,22 @@ export default function PlanPage() {
   );
 }
 
-// Pulls plan meta for RoadmapOverview
 function TransformationPlanOverviewWrapper() {
-  const { userGoal, timeCommitment } = usePlan();
+  const { userGoal, timeCommitment, numberOfWeeks } = usePlan();
 
   const planMeta = userGoal && timeCommitment
-    ? { userGoal, timeCommitment }
+    ? { userGoal, timeCommitment, numberOfWeeks }
     : null;
 
   return <RoadmapOverview planMeta={planMeta} />;
 }
 
 function TransformationPlanCardsWrapper() {
-  const { userGoal, timeCommitment } = usePlan();
+  const { userGoal, timeCommitment, numberOfWeeks } = usePlan();
 
   const planMeta = userGoal && timeCommitment
-    ? { userGoal, timeCommitment }
+    ? { userGoal, timeCommitment, numberOfWeeks }
     : null;
 
   return <TransformationPlanCards transformationPlan={planMeta} />;
 }
-

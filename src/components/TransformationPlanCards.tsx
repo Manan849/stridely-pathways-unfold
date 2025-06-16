@@ -28,7 +28,7 @@ type DynamicTransformationPlan = {
 };
 
 type Props = {
-  transformationPlan: { userGoal?: string; timeCommitment?: string; totalWeeks?: number } | null;
+  transformationPlan: { userGoal?: string; timeCommitment?: string; numberOfWeeks?: number } | null;
 };
 
 const bgCard = "#F2F2F7";
@@ -58,7 +58,9 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
     setError(null);
     try {
       // As totalWeeks might be unknown, fetch totalWeeks from plan or use a fallback (e.g. 12)
-      const baseWeeks = transformationPlan?.totalWeeks ?? 12;
+      const baseWeeks = transformationPlan?.numberOfWeeks ?? 12;
+      setTotalWeeks(baseWeeks);
+      
       const res = await fetch(
         "https://iapwbozpkpulkrpxppqy.functions.supabase.co/generate-detailed-transformation-plan",
         {
@@ -79,9 +81,6 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
       const { weekData } = await res.json();
       if (!weekData) throw new Error("No week data found.");
       setWeeksByIndex(prev => ({ ...prev, [weekNumber]: weekData }));
-      if (typeof setTotalWeeks === "function" && !totalWeeks && weekData.week && weekData.totalWeeks) {
-        setTotalWeeks(weekData.totalWeeks); // Allow for future upgrades
-      }
     } catch (e: any) {
       setError(e.message || "Unable to load content for this week.");
     } finally {
@@ -95,8 +94,11 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
     setSelectedDay(null);
   }
   function handleNext() {
-    setCurrentWeekIdx(i => i + 1);
-    fetchWeek(currentWeekIdx + 1);
+    const maxWeeks = totalWeeks || 12;
+    if (currentWeekIdx < maxWeeks) {
+      setCurrentWeekIdx(i => i + 1);
+      fetchWeek(currentWeekIdx + 1);
+    }
     setSelectedDay(null);
   }
 
@@ -166,6 +168,7 @@ export default function TransformationPlanCards({ transformationPlan }: Props) {
         </div>
         <button
           className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold disabled:opacity-50"
+          disabled={totalWeeks ? currentWeekIdx >= totalWeeks : false}
           onClick={handleNext}
         >
           Next →

@@ -9,9 +9,7 @@ import { usePlan } from "@/context/PlanContext";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Helper: get the ANON key from the client file as a constant.
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcHdib3pwa3B1bGtycHhwcHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NTg0MjQsImV4cCI6MjA2NTUzNDQyNH0.Y4Gx54vceTvlnbG31z6gnskXsNUCaXobjhOPZo6Oa_E";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcHdib3pwa3B1bGtycHhwcHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NTg0MjQsImV4cCI6MjA2NTUzNDQyNH0.Y4Gx54vceTvlnbG31z6gnskXsNUCaXobjhOPZo6Oa_E";
 
 export default function NextBigGoalCard() {
   const {
@@ -21,6 +19,8 @@ export default function NextBigGoalCard() {
     setTimeCommitment,
     setTransformationPlan,
     userId,
+    numberOfWeeks,
+    setNumberOfWeeks,
   } = usePlan();
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +39,7 @@ export default function NextBigGoalCard() {
             user_id: userId,
             userGoal,
             timeCommitment,
+            numberOfWeeks,
           }),
         }
       );
@@ -95,10 +96,25 @@ export default function NextBigGoalCard() {
             </Label>
             <TimeDropdown value={timeCommitment} onChange={setTimeCommitment} />
           </div>
+          <div>
+            <Label htmlFor="weeks-input" className="mb-2 block font-semibold">
+              How many weeks for your plan?
+            </Label>
+            <Input
+              id="weeks-input"
+              type="number"
+              placeholder="e.g. 12"
+              value={numberOfWeeks}
+              onChange={(e) => setNumberOfWeeks(parseInt(e.target.value) || 12)}
+              disabled={loading}
+              min="4"
+              max="52"
+            />
+          </div>
           <Button
             className="w-full mt-4 bg-[#007AFF] hover:bg-[#005bb5] text-white text-lg font-bold py-3 rounded-xl shadow-card transition-button"
             onClick={handleGenerate}
-            disabled={loading || !userGoal || !timeCommitment}
+            disabled={loading || !userGoal || !timeCommitment || !numberOfWeeks}
             size="lg"
           >
             {loading ? "Generating..." : "Generate My Transformation Plan"}

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from "react";
 import { useUser } from "@/hooks/useUser";
 
@@ -21,7 +22,7 @@ type Week = {
 
 type TransformationPlan = {
   weeks: Week[];
-  id?: string; // Optionally track plan id here if loaded from db
+  id?: string;
 };
 
 type PlanContextType = {
@@ -31,7 +32,9 @@ type PlanContextType = {
   setUserGoal: React.Dispatch<React.SetStateAction<string>>;
   timeCommitment: string;
   setTimeCommitment: React.Dispatch<React.SetStateAction<string>>;
-  planId?: string; // populated if loaded from db
+  numberOfWeeks: number;
+  setNumberOfWeeks: React.Dispatch<React.SetStateAction<number>>;
+  planId?: string;
   userId?: string;
 };
 
@@ -44,6 +47,8 @@ const PlanContext = createContext<PlanContextType>({
   setUserGoal: () => {},
   timeCommitment: "10 hrs/week",
   setTimeCommitment: () => {},
+  numberOfWeeks: 12,
+  setNumberOfWeeks: () => {},
   planId: undefined,
   userId: undefined,
 });
@@ -52,9 +57,8 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [transformationPlan, setTransformationPlan] = useState<TransformationPlan>(defaultPlan);
   const [userGoal, setUserGoal] = useState<string>("");
   const [timeCommitment, setTimeCommitment] = useState<string>("10 hrs/week");
+  const [numberOfWeeks, setNumberOfWeeks] = useState<number>(12);
 
-  // If a plan is loaded from Supabase, you could set the planId here.
-  // For now, we add a userId context value so hooks can use it conveniently.
   const { user } = useUser();
 
   return (
@@ -62,7 +66,8 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
       transformationPlan, setTransformationPlan,
       userGoal, setUserGoal,
       timeCommitment, setTimeCommitment,
-      planId: (transformationPlan as any).id, // for db-backed plans
+      numberOfWeeks, setNumberOfWeeks,
+      planId: (transformationPlan as any).id,
       userId: user?.id,
     }}>
       {children}

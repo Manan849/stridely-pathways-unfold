@@ -11,8 +11,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function fetchSupabaseRoadmap(userId: string, userGoal: string, timeCommitment: string) {
-  const url = `${supabaseUrl}/rest/v1/user_plans?user_id=eq.${userId}&goal=eq.${encodeURIComponent(userGoal)}&time_commitment=eq.${encodeURIComponent(timeCommitment)}&select=plan&limit=1`;
+async function fetchSupabaseRoadmap(userId: string, userGoal: string, timeCommitment: string, numberOfWeeks: number) {
+  const url = `${supabaseUrl}/rest/v1/user_plans?user_id=eq.${userId}&goal=eq.${encodeURIComponent(userGoal)}&time_commitment=eq.${encodeURIComponent(timeCommitment)}&number_of_weeks=eq.${numberOfWeeks}&select=plan&limit=1`;
   const res = await fetch(url, {
     headers: {
       "apikey": supabaseKey,
@@ -26,15 +26,15 @@ async function fetchSupabaseRoadmap(userId: string, userGoal: string, timeCommit
   return null;
 }
 
-async function storeSupabaseRoadmap(userId: string, userGoal: string, timeCommitment: string, plan: any) {
+async function storeSupabaseRoadmap(userId: string, userGoal: string, timeCommitment: string, numberOfWeeks: number, plan: any) {
   const url = `${supabaseUrl}/rest/v1/user_plans`;
-  // Upsert by user-goal-commitment triple (only one plan per user/goal combo)
   const body = [{
     user_id: userId,
     goal: userGoal,
     time_commitment: timeCommitment,
+    number_of_weeks: numberOfWeeks,
     plan,
-    current_week_index: 1 // default
+    current_week_index: 1
   }];
   await fetch(url, {
     method: "POST",
@@ -49,22 +49,21 @@ async function storeSupabaseRoadmap(userId: string, userGoal: string, timeCommit
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { user_id, userGoal, timeCommitment } = await req.json();
+    const { user_id, userGoal, timeCommitment, numberOfWeeks = 12 } = await req.json();
 
-    // Check for cached roadmap first
+    console.log("Generating roadmap for:", { userGoal, timeCommitment, numberOfWeeks });
+
     let roadmap = null;
     if (user_id && userGoal && timeCommitment && supabaseUrl && supabaseKey) {
-      roadmap = await fetchSupabaseRoadmap(user_id, userGoal, timeCommitment);
+      roadmap = await fetchSupabaseRoadmap(user_id, userGoal, timeCommitment, numberOfWeeks);
     }
 
     if (!roadmap) {
-      // Compose system/user prompts as before
       const systemPrompt = `You are an AI life transformation planner.
 
 A user has entered a big life goal and a weekly time commitment. Your job is to generate a practical, structured roadmap to help them achieve this goal.
@@ -72,8 +71,9 @@ A user has entered a big life goal and a weekly time commitment. Your job is to 
 Use the inputs:
 - Goal: {{userGoal}}
 - Weekly time commitment: {{timeCommitment}}
+- Number of weeks: {{numberOfWeeks}}
 
-Generate a roadmap spanning 8–20 weeks depending on the ambition and time input. Each week should include:
+Generate a roadmap spanning EXACTLY ${numberOfWeeks} weeks. Each week should include:
 - Skills to build
 - Habits to adopt
 - 1 milestone
@@ -95,9 +95,10 @@ Use this JSON format in your output:
     ...
   ]
 }
-Make the output clear, simple, practical, and encouraging.`;
+Make the output clear, simple, practical, and encouraging. Ensure you provide exactly ${numberOfWeeks} weeks.`;
 
-      const userPrompt = `Goal: ${userGoal}\nWeekly time commitment: ${timeCommitment}`;
+      const userPrompt = `Goal: ${userGoal}\nWeekly time commitment: ${timeCommitment}\nNumber of weeks: ${numberOfWeeks}`;
+      
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -111,28 +112,25 @@ Make the output clear, simple, practical, and encouraging.`;
             { role: "user", content: userPrompt }
           ],
           temperature: 0.6,
-          max_tokens: 2200
+          max_tokens: 3000
         }),
       });
 
       const data = await response.json();
-      // Robust JSON extraction:
       let text: string = data.choices?.[0]?.message?.content ?? "";
-      // Try to extract JSON (between first '{' and last '}')
+      
       let jsonString = "";
       const firstCurly = text.indexOf('{');
       const lastCurly = text.lastIndexOf('}');
       if (firstCurly !== -1 && lastCurly !== -1 && firstCurly < lastCurly) {
         jsonString = text.slice(firstCurly, lastCurly + 1);
       } else {
-        // Fall back: try to parse directly if it's JSON only
         jsonString = text.trim();
       }
 
       try {
         roadmap = JSON.parse(jsonString);
       } catch (e) {
-        // Try to fix common issues: removing non-JSON leading/trailing text
         try {
           const m = text.match(/\{[\s\S]+\}/);
           if (m) {
@@ -143,18 +141,20 @@ Make the output clear, simple, practical, and encouraging.`;
         }
       }
 
-      if (!roadmap || !roadmap.weeks) {
+      if (!roadmap || !roadmap.weeks || roadmap.weeks.length !== numberOfWeeks) {
+        console.error("Invalid roadmap generated:", roadmap);
         return new Response(
-          JSON.stringify({ error: "Failed to parse roadmap JSON from AI response." }),
+          JSON.stringify({ error: `Failed to generate ${numberOfWeeks}-week roadmap.` }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      // Store in Supabase, ignore errors
+
       if (user_id && userGoal && timeCommitment && supabaseUrl && supabaseKey) {
-        await storeSupabaseRoadmap(user_id, userGoal, timeCommitment, roadmap);
+        await storeSupabaseRoadmap(user_id, userGoal, timeCommitment, numberOfWeeks, roadmap);
       }
     }
 
+    console.log("Roadmap generated successfully:", roadmap.weeks.length, "weeks");
     return new Response(JSON.stringify({ roadmap }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
